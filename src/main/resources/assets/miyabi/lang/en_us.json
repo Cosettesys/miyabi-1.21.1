@@ -1,0 +1,13 @@
+{
+  "itemGroup.miyabi": "Example Mod Tab",
+  "block.miyabi.example_block": "Example Block",
+  "item.miyabi.example_item": "Example Item",
+
+  "miyabi.configuration.title": "Miyabi Configs",
+  "miyabi.configuration.section.miyabi.common.toml": "Miyabi Configs",
+  "miyabi.configuration.section.miyabi.common.toml.title": "Miyabi Configs",
+  "miyabi.configuration.items": "Item List",
+  "miyabi.configuration.logDirtBlock": "Log Dirt Block",
+  "miyabi.configuration.magicNumberIntroduction": "Magic Number Text",
+  "miyabi.configuration.magicNumber": "Magic Number"
+}
