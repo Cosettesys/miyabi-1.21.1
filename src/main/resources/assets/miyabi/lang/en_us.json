@@ -9,5 +9,12 @@
   "miyabi.configuration.items": "Item List",
   "miyabi.configuration.logDirtBlock": "Log Dirt Block",
   "miyabi.configuration.magicNumberIntroduction": "Magic Number Text",
-  "miyabi.configuration.magicNumber": "Magic Number"
+  "miyabi.configuration.magicNumber": "Magic Number",
+  "key.categories.miyabi": "Miyabi",
+  "key.miyabi.spell1": "Spell 1",
+  "key.miyabi.spell2": "Spell 2",
+  "key.miyabi.spell3": "Spell 3",
+  "key.miyabi.spell4": "Spell 4",
+  "key.miyabi.spell5": "Spell 5",
+  "key.miyabi.silentcast_toggle": "Toggle Silent Cast"
 }
