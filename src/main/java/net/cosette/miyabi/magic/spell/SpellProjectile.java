@@ -45,4 +45,8 @@ public class SpellProjectile extends AbstractHurtingProjectile {
             this.discard();
         }
     }
+    @Override
+    public boolean displayFireAnimation() {
+        return false;
+    }
 }
