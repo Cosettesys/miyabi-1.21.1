@@ -3,7 +3,6 @@ package net.cosette.miyabi.magic.spell;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.AbstractHurtingProjectile;
-import net.minecraft.world.entity.projectile.ProjectileDeflection;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -13,9 +12,11 @@ import net.cosette.miyabi.registry.ModEntities;
 public class SpellProjectile extends AbstractHurtingProjectile {
     private String spellId = "fireball";
     private boolean silentCast = false;
+
     public SpellProjectile(EntityType<? extends SpellProjectile> type, Level level) {
         super(type, level);
     }
+
     public SpellProjectile(Level level, LivingEntity shooter, double dx, double dy, double dz, String spellId, boolean silentCast) {
         super(ModEntities.SPELL_PROJECTILE.get(),
                 shooter.getX(), shooter.getEyeY() - 0.1, shooter.getZ(),
@@ -24,20 +25,26 @@ public class SpellProjectile extends AbstractHurtingProjectile {
         this.spellId = spellId;
         this.silentCast = silentCast;
     }
+
+    public String getSpellId() { return spellId; }
+
     private SpellDefinition definition() {
         return SpellRegistry.byId(spellId);
     }
+
     @Override
     protected void onHitEntity(EntityHitResult result) {
         super.onHitEntity(result);
         if (this.level().isClientSide) return;
+
         SpellDefinition def = definition();
         if (def == null) return;
-        float damage = def.computeDamage(silentCast);
-        var owner = getOwner();
-        var source = this.damageSources().mobProjectile(this, owner instanceof LivingEntity le ? le : null);
-        result.getEntity().hurt(source, damage);
+
+        LivingEntity caster = getOwner() instanceof LivingEntity le ? le : null;
+        SpellCastContext context = new SpellCastContext(caster, this, silentCast);
+        def.effect().apply(result.getEntity(), def, context);
     }
+
     @Override
     protected void onHit(HitResult result) {
         super.onHit(result);
@@ -45,6 +52,7 @@ public class SpellProjectile extends AbstractHurtingProjectile {
             this.discard();
         }
     }
+
     @Override
     public boolean displayFireAnimation() {
         return false;
