@@ -17,6 +17,7 @@ public final class ManaData {
     private int regenFlat;
     private float regenScaling; // pourcentage, 0-100
     private int ticksUntilNextRegen;
+    public int getTicksUntilNextRegen() { return ticksUntilNextRegen; }
     public ManaData(float max, int regenFlat, float regenScaling) {
         this.max = max;
         this.current = max;
@@ -98,7 +99,7 @@ public final class ManaData {
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Miyabi.MODID);
     public static final Supplier<AttachmentType<ManaData>> MANA =
             ATTACHMENT_TYPES.register("mana", () -> AttachmentType.builder(
-                            (holder) -> new ManaData(100f, 1, 0.5f) // valeurs par défaut, à équilibrer en Phase 5
+                            (holder) -> new ManaData(100f, 1, 0.5f)
                     )
                     .serialize(new IAttachmentSerializer<CompoundTag, ManaData>() {
                         @Override

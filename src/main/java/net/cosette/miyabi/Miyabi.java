@@ -62,6 +62,7 @@ public class Miyabi {
         ModEntities.ENTITY_TYPES.register(modEventBus);
         ElementResistanceData.ATTACHMENT_TYPES.register(modEventBus);
         DamageLogData.ATTACHMENT_TYPES.register(modEventBus);
+        ManaDebugData.ATTACHMENT_TYPES.register(modEventBus);
 
         NeoForge.EVENT_BUS.register(this);
         modEventBus.addListener(this::addCreative);

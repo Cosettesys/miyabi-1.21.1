@@ -7,12 +7,14 @@ public record SpellDefinition(
         SpellCategory category,
         SpellEffect effect,
         float baseSpeed,
-        float baseSize
+        float baseSize,
+        int baseCastDurationTicks,
+        float manaCost,
+        float maxIntensityPercent
 ) {
     public float computeSpeed() {
         return baseSpeed * shape.getSpeedMultiplier();
     }
-
     public float computeSize() {
         return baseSize * shape.getSizeMultiplier();
     }

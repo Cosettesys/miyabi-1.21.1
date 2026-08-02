@@ -1,9 +1,9 @@
 package net.cosette.miyabi.magic;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -36,8 +36,13 @@ public final class ManaCommands {
                                         .then(intField("regenFlat"))
                                         .then(Commands.literal("regenScaling")
                                                 .then(Commands.argument("value", FloatArgumentType.floatArg(0f, 100f))
-                                                        .executes(ctx -> setRegenScaling(ctx, FloatArgumentType.getFloat(ctx, "value"))))))))
-        );
+                                                        .executes(ctx -> setRegenScaling(ctx, FloatArgumentType.getFloat(ctx, "value")))))))
+                        .then(Commands.literal("debuglog")
+                                .requires(src -> src.hasPermission(2))
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .then(Commands.argument("enabled", BoolArgumentType.bool())
+                                                .executes(ManaCommands::setDebugLog))))
+                ));
     }
     private static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> intField(String name) {
         return Commands.literal(name)
@@ -74,6 +79,15 @@ public final class ManaCommands {
         ManaData data = player.getData(ManaData.MANA);
         data.setRegenScaling(value);
         ctx.getSource().sendSuccess(() -> Component.literal("regenScaling de " + player.getName().getString() + " -> " + value + "%"), true);
+        return 1;
+    }
+    private static int setDebugLog(com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+        boolean enabled = BoolArgumentType.getBool(ctx, "enabled");
+        player.getData(ManaDebugData.MANA_DEBUG).setEnabled(enabled);
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "Log mana " + (enabled ? "activé" : "désactivé") + " pour " + player.getName().getString()), true);
         return 1;
     }
 }

@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "miyabi:fire_magic",
+    "miyabi:water_magic",
+    "miyabi:earth_magic",
+    "miyabi:air_magic"
+  ]
+}

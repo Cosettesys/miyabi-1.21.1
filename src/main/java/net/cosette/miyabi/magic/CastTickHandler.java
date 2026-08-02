@@ -1,5 +1,7 @@
 package net.cosette.miyabi.magic;
 
+import net.cosette.miyabi.magic.spell.SpellDefinition;
+import net.cosette.miyabi.magic.spell.SpellRegistry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -23,15 +25,22 @@ public final class CastTickHandler {
             CastManager.cancelCast(player, cast, "connexion perdue");
             return;
         }
-        cast.addProgress(1);
         int duration = CastManager.effectiveDurationTicks(cast.getSlot(), cast.isSilentAtStart());
-        if (cast.getProgressTicks() >= duration) {
-            CastManager.finishCast(player, cast);
-            return;
+        SpellDefinition def = SpellRegistry.forSlot(cast.getSlot());
+        float maxIntensity = (def != null) ? def.maxIntensityPercent() : 100f;
+        float manaLimitedIntensity = maxIntensity;
+        if (def != null && def.manaCost() > 0f) {
+            ManaData mana = player.getData(ManaData.MANA);
+            manaLimitedIntensity = (mana.getCurrent() / def.manaCost()) * 100f;
+        }
+        float achievableIntensity = Math.max(100f, Math.min(maxIntensity, manaLimitedIntensity));
+        int maxProgressTicks = Math.round(duration * (achievableIntensity / 100f));
+        if (cast.getProgressTicks() < maxProgressTicks) {
+            cast.addProgress(1);
         }
         if (cast.getProgressTicks() % 20 == 0) {
             int percent = (int) ((cast.getProgressTicks() * 100L) / duration);
-            if (percent > cast.getLastAnnouncedPercent()) {
+            if (percent != cast.getLastAnnouncedPercent()) {
                 cast.setLastAnnouncedPercent(percent);
                 player.sendSystemMessage(Component.literal("Incantation chargée à " + percent + "%"));
             }
