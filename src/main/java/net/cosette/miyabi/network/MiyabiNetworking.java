@@ -14,7 +14,11 @@ public final class MiyabiNetworking {
     public static void register(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar("1");
 
+        registrar.playToServer(MeditationInputPayload.TYPE, MeditationInputPayload.STREAM_CODEC, MeditationPacketHandlers::onMeditationInput);
         registrar.playToServer(CastInputPayload.TYPE, CastInputPayload.STREAM_CODEC, CastPacketHandlers::onCastInput);
         registrar.playToServer(SilentCastTogglePayload.TYPE, SilentCastTogglePayload.STREAM_CODEC, CastPacketHandlers::onSilentCastToggle);
+        registrar.playToServer(MenuRequestPayload.TYPE, MenuRequestPayload.STREAM_CODEC, MenuPacketHandlers::onMenuRequest);
+        registrar.playToClient(MenuDataPayload.TYPE, MenuDataPayload.STREAM_CODEC, MenuPacketHandlers::onMenuData);
+        registrar.playToServer(SlotAssignPayload.TYPE, SlotAssignPayload.STREAM_CODEC, MenuPacketHandlers::onSlotAssign);
     }
 }

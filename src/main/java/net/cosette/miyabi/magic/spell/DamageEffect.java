@@ -1,5 +1,7 @@
 package net.cosette.miyabi.magic.spell;
 
+import net.cosette.miyabi.magic.SchoolResistanceData;
+import net.cosette.miyabi.progression.PlayerProgressionData;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -11,7 +13,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.cosette.miyabi.magic.DamageLogData;
-import net.cosette.miyabi.magic.ElementResistanceData;
 import net.cosette.miyabi.magic.ModDamageTypes;
 
 public record DamageEffect(float baseDamage, PhysicalDamageType physicalType) implements SpellEffect {
@@ -20,14 +21,19 @@ public record DamageEffect(float baseDamage, PhysicalDamageType physicalType) im
     }
     @Override
     public void apply(Entity target, SpellDefinition definition, SpellCastContext context) {
-        float damage = baseDamage * definition.element().getDamageMultiplier() * definition.shape().getDamageMultiplier()
-                * physicalType.getDamageMultiplier() * (context.intensityPercent() / 100f);
+        float rankMultiplier = 1.0f;
+        if (context.caster() instanceof ServerPlayer casterPlayer) {
+            rankMultiplier = casterPlayer.getData(PlayerProgressionData.PROGRESSION)
+                    .getSchoolRank(definition.school()).getDamageMultiplier();
+        }
+        float damage = baseDamage * definition.school().getDamageMultiplier() * definition.shape().getDamageMultiplier()
+                * physicalType.getDamageMultiplier() * (context.intensityPercent() / 100f) * rankMultiplier;
         if (context.silentCast()) damage *= 0.5f;
-        float resistance = target.getData(ElementResistanceData.ELEMENT_RESISTANCE).getResistancePercent(definition.element());
+        float resistance = target.getData(SchoolResistanceData.SCHOOL_RESISTANCE).getResistancePercent(definition.school());
         damage = Math.max(0f, damage * (1f - resistance / 100f));
         var damageTypeHolder = target.level().registryAccess()
                 .lookupOrThrow(Registries.DAMAGE_TYPE)
-                .getOrThrow(ModDamageTypes.forElement(definition.element()));
+                .getOrThrow(ModDamageTypes.forSchool(definition.school()));
         DamageSource source = new DamageSource(damageTypeHolder, context.sourceEntity(), context.caster());
         float armor = 0f;
         float armorIgnored = 0f;

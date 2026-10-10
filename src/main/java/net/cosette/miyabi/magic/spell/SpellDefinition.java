@@ -1,8 +1,11 @@
 package net.cosette.miyabi.magic.spell;
 
+import net.cosette.miyabi.progression.MagicRank;
+
 public record SpellDefinition(
         String id,
-        SpellElement element,
+        MagicSchool school,
+        MagicRank rank,
         SpellShape shape,
         SpellCategory category,
         SpellEffect effect,

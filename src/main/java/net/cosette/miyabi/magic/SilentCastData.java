@@ -47,5 +47,6 @@ public final class SilentCastData {
                             return data.serializeNBT(provider);
                         }
                     })
+                    .copyOnDeath()
                     .build());
 }

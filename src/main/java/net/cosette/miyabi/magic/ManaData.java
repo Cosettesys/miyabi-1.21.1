@@ -99,7 +99,7 @@ public final class ManaData {
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Miyabi.MODID);
     public static final Supplier<AttachmentType<ManaData>> MANA =
             ATTACHMENT_TYPES.register("mana", () -> AttachmentType.builder(
-                            (holder) -> new ManaData(100f, 1, 0.5f)
+                            (holder) -> new ManaData(0f, 1, 0.5f) // était 100f : le mana n'existe qu'après l'éveil
                     )
                     .serialize(new IAttachmentSerializer<CompoundTag, ManaData>() {
                         @Override
@@ -111,5 +111,6 @@ public final class ManaData {
                             return data.serializeNBT(provider);
                         }
                     })
+                    .copyOnDeath()
                     .build());
 }

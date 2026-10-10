@@ -4,6 +4,8 @@
     "miyabi:fire_magic",
     "miyabi:water_magic",
     "miyabi:earth_magic",
-    "miyabi:air_magic"
+    "miyabi:wind_magic",
+    "miyabi:gravity_magic",
+    "miyabi:arcane_magic"
   ]
 }

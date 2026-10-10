@@ -1,6 +1,8 @@
 package net.cosette.miyabi;
 
 import net.cosette.miyabi.magic.*;
+import net.cosette.miyabi.progression.MeditationData;
+import net.cosette.miyabi.progression.PlayerProgressionData;
 import net.cosette.miyabi.registry.ModEntities;
 import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
@@ -60,9 +62,12 @@ public class Miyabi {
         CastData.ATTACHMENT_TYPES.register(modEventBus);
         SilentCastData.ATTACHMENT_TYPES.register(modEventBus);
         ModEntities.ENTITY_TYPES.register(modEventBus);
-        ElementResistanceData.ATTACHMENT_TYPES.register(modEventBus);
+        SchoolResistanceData.ATTACHMENT_TYPES.register(modEventBus);
         DamageLogData.ATTACHMENT_TYPES.register(modEventBus);
         ManaDebugData.ATTACHMENT_TYPES.register(modEventBus);
+        PlayerProgressionData.ATTACHMENT_TYPES.register(modEventBus);
+        MeditationData.ATTACHMENT_TYPES.register(modEventBus);
+        SpellSlotsData.ATTACHMENT_TYPES.register(modEventBus);
 
         NeoForge.EVENT_BUS.register(this);
         modEventBus.addListener(this::addCreative);

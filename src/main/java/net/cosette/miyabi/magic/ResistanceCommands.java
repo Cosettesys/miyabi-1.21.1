@@ -13,54 +13,47 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.cosette.miyabi.Miyabi;
-import net.cosette.miyabi.magic.spell.SpellElement;
-
+import net.cosette.miyabi.magic.spell.MagicSchool;
 import java.util.Arrays;
 import java.util.Collection;
 
 @EventBusSubscriber(modid = Miyabi.MODID)
 public final class ResistanceCommands {
     private ResistanceCommands() {}
-
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         register(event.getDispatcher());
     }
-
     private static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("miyabi")
                 .then(Commands.literal("magic")
                         .then(Commands.literal("resistance")
                                 .requires(src -> src.hasPermission(2))
                                 .then(Commands.argument("target", EntityArgument.entities())
-                                        .then(Commands.argument("element", StringArgumentType.word())
+                                        .then(Commands.argument("school", StringArgumentType.word())
                                                 .suggests((context, builder) -> SharedSuggestionProvider.suggest(
-                                                        Arrays.stream(SpellElement.values()).map(Enum::name), builder))
+                                                        Arrays.stream(MagicSchool.values()).map(Enum::name), builder))
                                                 .then(Commands.argument("percent", FloatArgumentType.floatArg())
                                                         .executes(ResistanceCommands::setResistance)))))));
     }
-
     private static int setResistance(com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx)
             throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         Collection<? extends Entity> targets = EntityArgument.getEntities(ctx, "target");
-        String elementName = StringArgumentType.getString(ctx, "element").toUpperCase();
+        String schoolName = StringArgumentType.getString(ctx, "school").toUpperCase();
         float percent = FloatArgumentType.getFloat(ctx, "percent");
-
-        SpellElement element;
+        MagicSchool school;
         try {
-            element = SpellElement.valueOf(elementName);
+            school = MagicSchool.valueOf(schoolName);
         } catch (IllegalArgumentException e) {
-            ctx.getSource().sendFailure(Component.literal("Élément inconnu : " + elementName));
+            ctx.getSource().sendFailure(Component.literal("École inconnue : " + schoolName));
             return 0;
         }
-
         for (Entity target : targets) {
-            target.getData(ElementResistanceData.ELEMENT_RESISTANCE).setResistancePercent(element, percent);
+            target.getData(SchoolResistanceData.SCHOOL_RESISTANCE).setResistancePercent(school, percent);
         }
-
         int count = targets.size();
-        SpellElement finalElement = element;
-        ctx.getSource().sendSuccess(() -> Component.literal(count + " entité(s) -> résistance " + finalElement.name() + " = " + percent + "%"), true);
+        MagicSchool finalSchool = school;
+        ctx.getSource().sendSuccess(() -> Component.literal(count + " entité(s) -> résistance " + finalSchool.name() + " = " + percent + "%"), true);
         return count;
     }
 }

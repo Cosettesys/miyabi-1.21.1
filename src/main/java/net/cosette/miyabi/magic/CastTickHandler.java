@@ -25,16 +25,20 @@ public final class CastTickHandler {
             CastManager.cancelCast(player, cast, "connexion perdue");
             return;
         }
-        int duration = CastManager.effectiveDurationTicks(cast.getSlot(), cast.isSilentAtStart());
-        SpellDefinition def = SpellRegistry.forSlot(cast.getSlot());
+        int duration = CastManager.effectiveDurationTicks(player, cast.getSlot(), cast.isSilentAtStart());
+        SpellDefinition def = CastManager.spellInSlot(player, cast.getSlot());
         float maxIntensity = (def != null) ? def.maxIntensityPercent() : 100f;
         float manaLimitedIntensity = maxIntensity;
-        if (def != null && def.manaCost() > 0f) {
-            ManaData mana = player.getData(ManaData.MANA);
-            manaLimitedIntensity = (mana.getCurrent() / def.manaCost()) * 100f;
+        if (def != null) {
+            float cost = CastManager.effectiveManaCost(player, def);
+            if (cost > 0f) {
+                ManaData mana = player.getData(ManaData.MANA);
+                manaLimitedIntensity = (mana.getCurrent() / cost) * 100f;
+            }
         }
         float achievableIntensity = Math.max(100f, Math.min(maxIntensity, manaLimitedIntensity));
         int maxProgressTicks = Math.round(duration * (achievableIntensity / 100f));
+
         if (cast.getProgressTicks() < maxProgressTicks) {
             cast.addProgress(1);
         }
