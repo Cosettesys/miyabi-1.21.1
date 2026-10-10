@@ -12,17 +12,16 @@ import net.cosette.miyabi.magic.SpellSlots;
 import net.cosette.miyabi.magic.SpellSlotsData;
 import net.cosette.miyabi.magic.spell.MagicSchool;
 import net.cosette.miyabi.magic.spell.SpellDefinition;
-import net.cosette.miyabi.magic.spell.SpellRegistry;
+import net.cosette.miyabi.skills.SpellRegistry;
 import net.cosette.miyabi.progression.MagicRank;
 import net.cosette.miyabi.progression.MeditationData;
 import net.cosette.miyabi.progression.PlayerProgressionData;
 import net.cosette.miyabi.progression.SwordStyle;
-import net.cosette.miyabi.progression.SwordTechniqueDefinition;
-import net.cosette.miyabi.progression.SwordTechniqueRegistry;
+import net.cosette.miyabi.skills.swordtechniques.SwordTechniqueDefinition;
+import net.cosette.miyabi.skills.SwordTechniqueRegistry;
 import java.util.Comparator;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public final class MenuPacketHandlers {

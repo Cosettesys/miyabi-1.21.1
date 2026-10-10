@@ -1,5 +1,6 @@
 package net.cosette.miyabi.magic.spell;
 
+import net.cosette.miyabi.skills.SpellRegistry;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.AbstractHurtingProjectile;

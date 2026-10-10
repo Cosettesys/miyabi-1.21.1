@@ -2,7 +2,7 @@ package net.cosette.miyabi.magic;
 
 import net.cosette.miyabi.magic.spell.SpellDefinition;
 import net.cosette.miyabi.magic.spell.SpellProjectile;
-import net.cosette.miyabi.magic.spell.SpellRegistry;
+import net.cosette.miyabi.skills.SpellRegistry;
 import net.cosette.miyabi.progression.MasteryEffects;
 import net.cosette.miyabi.progression.MasteryManager;
 import net.cosette.miyabi.progression.MeditationData;
@@ -13,8 +13,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.cosette.miyabi.Miyabi;
-import net.cosette.miyabi.progression.SwordTechniqueDefinition;
-import net.cosette.miyabi.progression.SwordTechniqueRegistry;
+import net.cosette.miyabi.skills.swordtechniques.SwordTechniqueDefinition;
+import net.cosette.miyabi.skills.SwordTechniqueRegistry;
 
 public final class CastManager {
     private CastManager() {}

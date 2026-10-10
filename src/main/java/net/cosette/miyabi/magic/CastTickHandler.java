@@ -1,7 +1,6 @@
 package net.cosette.miyabi.magic;
 
 import net.cosette.miyabi.magic.spell.SpellDefinition;
-import net.cosette.miyabi.magic.spell.SpellRegistry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
