@@ -7,6 +7,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.cosette.miyabi.registry.ModAttachments;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -56,7 +57,7 @@ public final class ProgressionCommands {
     }
 
     private static PlayerProgressionData data(ServerPlayer player) {
-        return player.getData(PlayerProgressionData.PROGRESSION);
+        return player.getData(ModAttachments.PROGRESSION);
     }
 
     private static int get(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {

@@ -46,23 +46,4 @@ public final class SpellSlotsData {
         }
         return data;
     }
-
-    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
-            DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Miyabi.MODID);
-
-    public static final Supplier<AttachmentType<SpellSlotsData>> SPELL_SLOTS =
-            ATTACHMENT_TYPES.register("spell_slots", () -> AttachmentType.builder(holder -> new SpellSlotsData())
-                    .serialize(new IAttachmentSerializer<CompoundTag, SpellSlotsData>() {
-                        @Override
-                        public SpellSlotsData read(IAttachmentHolder holder, CompoundTag tag, HolderLookup.Provider provider) {
-                            return deserializeNBT(tag, provider);
-                        }
-
-                        @Override
-                        public CompoundTag write(SpellSlotsData data, HolderLookup.Provider provider) {
-                            return data.serializeNBT(provider);
-                        }
-                    })
-                    .copyOnDeath()
-                    .build());
 }

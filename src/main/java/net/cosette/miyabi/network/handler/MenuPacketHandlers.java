@@ -1,5 +1,6 @@
 package net.cosette.miyabi.network.handler;
 
+import net.cosette.miyabi.registry.ModAttachments;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -33,7 +34,7 @@ public final class MenuPacketHandlers {
     public static void onMenuRequest(MenuRequestPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
-            if (!player.getData(PlayerProgressionData.PROGRESSION).isManaAwakened()) {
+            if (!player.getData(ModAttachments.PROGRESSION).isManaAwakened()) {
                 player.sendSystemMessage(Component.literal("Ton mana n'est pas éveillé."));
                 return;
             }
@@ -47,14 +48,14 @@ public final class MenuPacketHandlers {
             if (payload.slot() < 0 || payload.slot() >= SpellSlots.COUNT) return;
             if (SpellRegistry.byId(payload.spellId()) == null
                     && SwordTechniqueRegistry.byId(payload.spellId()) == null) return;
-            if (!player.getData(PlayerProgressionData.PROGRESSION).isManaAwakened()) return;
-            if (player.getData(CastData.CAST).isCasting()
-                    || player.getData(MeditationData.MEDITATION).isMeditating()) {
+            if (!player.getData(ModAttachments.PROGRESSION).isManaAwakened()) return;
+            if (player.getData(ModAttachments.CAST).isCasting()
+                    || player.getData(ModAttachments.MEDITATION).isMeditating()) {
                 player.sendSystemMessage(Component.literal(
                         "Impossible de changer de sort pendant une incantation ou une méditation."));
                 return;
             }
-            player.getData(SpellSlotsData.SPELL_SLOTS).assign(payload.slot(), payload.spellId());
+            player.getData(ModAttachments.SPELL_SLOTS).assign(payload.slot(), payload.spellId());
             sendSnapshot(player);
         });
     }
@@ -63,8 +64,8 @@ public final class MenuPacketHandlers {
         context.enqueueWork(() -> ClientHooks.openMenu(payload));
     }
     private static void sendSnapshot(ServerPlayer player) {
-        PlayerProgressionData progression = player.getData(PlayerProgressionData.PROGRESSION);
-        ManaData mana = player.getData(ManaData.MANA);
+        PlayerProgressionData progression = player.getData(ModAttachments.PROGRESSION);
+        ManaData mana = player.getData(ModAttachments.MANA);
         List<MenuDataPayload.SchoolEntry> schools = new ArrayList<>();
         for (MagicSchool school : MagicSchool.values()) {
             MagicRank rank = progression.getSchoolRank(school);
@@ -93,7 +94,7 @@ public final class MenuPacketHandlers {
         for (SwordTechniqueDefinition t : techs) {
             techniques.add(new MenuDataPayload.TechniqueEntry(t.id(), t.style().name(), t.rank().name()));
         }
-        SpellSlotsData slotData = player.getData(SpellSlotsData.SPELL_SLOTS);
+        SpellSlotsData slotData = player.getData(ModAttachments.SPELL_SLOTS);
         List<String> slots = new ArrayList<>();
         for (int i = 0; i < SpellSlots.COUNT; i++) {
             slots.add(slotData.getSpellId(i));

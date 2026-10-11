@@ -125,21 +125,4 @@ public final class PlayerProgressionData {
         }
         return data;
     }
-    // --- Attachment ---
-    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
-            DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Miyabi.MODID);
-    public static final Supplier<AttachmentType<PlayerProgressionData>> PROGRESSION =
-            ATTACHMENT_TYPES.register("progression", () -> AttachmentType.builder(holder -> new PlayerProgressionData())
-                    .serialize(new IAttachmentSerializer<CompoundTag, PlayerProgressionData>() {
-                        @Override
-                        public PlayerProgressionData read(IAttachmentHolder holder, CompoundTag tag, HolderLookup.Provider provider) {
-                            return deserializeNBT(tag, provider);
-                        }
-                        @Override
-                        public CompoundTag write(PlayerProgressionData data, HolderLookup.Provider provider) {
-                            return data.serializeNBT(provider);
-                        }
-                    })
-                    .copyOnDeath()
-                    .build());
 }

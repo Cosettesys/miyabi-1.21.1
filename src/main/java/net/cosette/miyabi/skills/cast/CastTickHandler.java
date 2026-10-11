@@ -1,5 +1,6 @@
 package net.cosette.miyabi.skills.cast;
 
+import net.cosette.miyabi.registry.ModAttachments;
 import net.cosette.miyabi.skills.magic.SpellDefinition;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -15,7 +16,7 @@ public final class CastTickHandler {
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        CastData cast = player.getData(CastData.CAST);
+        CastData cast = player.getData(ModAttachments.CAST);
         if (!cast.isCasting()) return;
         if (!cast.isSilentAtStart()) {
             player.connection.teleport(cast.getAnchorX(), cast.getAnchorY(), cast.getAnchorZ(), player.getYRot(), player.getXRot());
@@ -32,7 +33,7 @@ public final class CastTickHandler {
         if (def != null) {
             float cost = CastManager.effectiveManaCost(player, def);
             if (cost > 0f) {
-                ManaData mana = player.getData(ManaData.MANA);
+                ManaData mana = player.getData(ModAttachments.MANA);
                 manaLimitedIntensity = (mana.getCurrent() / cost) * 100f;
             }
         }

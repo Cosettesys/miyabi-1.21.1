@@ -44,10 +44,4 @@ public final class MeditationData {
         }
         return false;
     }
-
-    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
-            DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Miyabi.MODID);
-
-    public static final Supplier<AttachmentType<MeditationData>> MEDITATION =
-            ATTACHMENT_TYPES.register("meditation", () -> AttachmentType.builder(holder -> new MeditationData()).build());
 }

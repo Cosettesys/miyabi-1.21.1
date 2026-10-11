@@ -6,6 +6,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.cosette.miyabi.registry.ModAttachments;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -37,14 +38,14 @@ public final class MagicCommands {
     private static int setSilentCastUnlocked(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
         boolean unlocked = BoolArgumentType.getBool(ctx, "unlocked");
-        player.getData(SilentCastData.SILENT_CAST).setUnlocked(unlocked);
+        player.getData(ModAttachments.SILENT_CAST).setUnlocked(unlocked);
         return CommandUtil.success(ctx, "Silent cast " + (unlocked ? "débloqué" : "verrouillé") + " pour " + player.getName().getString());
     }
 
     private static int setDamageLog(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
         boolean enabled = BoolArgumentType.getBool(ctx, "enabled");
-        player.getData(DamageLogData.DAMAGE_LOG).setEnabled(enabled);
+        player.getData(ModAttachments.DAMAGE_LOG).setEnabled(enabled);
         return CommandUtil.success(ctx, "Log de dégâts " + (enabled ? "activé" : "désactivé") + " pour " + player.getName().getString());
     }
 
@@ -59,7 +60,7 @@ public final class MagicCommands {
         }
 
         for (Entity target : targets) {
-            target.getData(SchoolResistanceData.SCHOOL_RESISTANCE).setResistancePercent(school, percent);
+            target.getData(ModAttachments.SCHOOL_RESISTANCE).setResistancePercent(school, percent);
         }
         CommandUtil.success(ctx, targets.size() + " entité(s) -> résistance " + school.name() + " = " + percent + "%");
         return targets.size();

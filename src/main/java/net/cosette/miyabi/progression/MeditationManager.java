@@ -1,5 +1,6 @@
 package net.cosette.miyabi.progression;
 
+import net.cosette.miyabi.registry.ModAttachments;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.cosette.miyabi.skills.cast.CastData;
@@ -21,14 +22,14 @@ public final class MeditationManager {
     public static final int KEEPALIVE_TIMEOUT_TICKS = 15;
     public static void start(ServerPlayer player, MeditationData med) {
         if (med.isMeditating()) return;
-        if (player.getData(CastData.CAST).isCasting()) return;
+        if (player.getData(ModAttachments.CAST).isCasting()) return;
         if (!player.onGround()) {
             player.sendSystemMessage(Component.literal("Tu dois être au sol pour méditer."));
             return;
         }
-        PlayerProgressionData progression = player.getData(PlayerProgressionData.PROGRESSION);
+        PlayerProgressionData progression = player.getData(ModAttachments.PROGRESSION);
         if (progression.isManaAwakened()
-                && player.getData(ManaData.MANA).getCurrent() < MANA_COST_PER_SECOND) {
+                && player.getData(ModAttachments.MANA).getCurrent() < MANA_COST_PER_SECOND) {
             player.sendSystemMessage(Component.literal("Pas assez de mana pour méditer."));
             return;
         }
@@ -47,8 +48,8 @@ public final class MeditationManager {
     }
     /** Appelée une fois par seconde pendant une méditation. */
     public static void secondTick(ServerPlayer player, MeditationData med) {
-        PlayerProgressionData progression = player.getData(PlayerProgressionData.PROGRESSION);
-        ManaData mana = player.getData(ManaData.MANA);
+        PlayerProgressionData progression = player.getData(ModAttachments.PROGRESSION);
+        ManaData mana = player.getData(ModAttachments.MANA);
         boolean success = player.getRandom().nextFloat() < SUCCESS_CHANCE;
         if (!progression.isManaAwakened()) {
             if (success) {

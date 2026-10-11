@@ -33,20 +33,4 @@ public final class SilentCastData {
         data.enabled = tag.getBoolean("enabled");
         return data;
     }
-    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
-            DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Miyabi.MODID);
-    public static final Supplier<AttachmentType<SilentCastData>> SILENT_CAST =
-            ATTACHMENT_TYPES.register("silent_cast", () -> AttachmentType.builder(holder -> new SilentCastData())
-                    .serialize(new IAttachmentSerializer<CompoundTag, SilentCastData>() {
-                        @Override
-                        public SilentCastData read(IAttachmentHolder holder, CompoundTag tag, HolderLookup.Provider provider) {
-                            return deserializeNBT(tag, provider);
-                        }
-                        @Override
-                        public CompoundTag write(SilentCastData data, HolderLookup.Provider provider) {
-                            return data.serializeNBT(provider);
-                        }
-                    })
-                    .copyOnDeath()
-                    .build());
 }

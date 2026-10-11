@@ -1,5 +1,6 @@
 package net.cosette.miyabi.skills.mana;
 
+import net.cosette.miyabi.registry.ModAttachments;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -14,9 +15,9 @@ public final class ManaTickHandler {
     public static void onPlayerTick(PlayerTickEvent.Post event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         int regenType = player.level().getGameRules().getInt(MiyabiGameRules.MANA_REGEN_TYPE);
-        ManaData mana = player.getData(ManaData.MANA);
+        ManaData mana = player.getData(ModAttachments.MANA);
         mana.tick(regenType);
-        if (player.getData(ManaDebugData.MANA_DEBUG).isEnabled() && player.level().getGameTime() % 20 == 0) {
+        if (player.getData(ModAttachments.MANA_DEBUG).isEnabled() && player.level().getGameTime() % 20 == 0) {
             String status = mana.getTicksUntilNextRegen() > 0
                     ? "en cooldown (" + mana.getTicksUntilNextRegen() + " ticks)"
                     : "prêt à régénérer";

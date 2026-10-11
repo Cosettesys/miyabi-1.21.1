@@ -37,19 +37,4 @@ public final class SchoolResistanceData {
         }
         return data;
     }
-    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
-            DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Miyabi.MODID);
-    public static final Supplier<AttachmentType<SchoolResistanceData>> SCHOOL_RESISTANCE =
-            ATTACHMENT_TYPES.register("school_resistance", () -> AttachmentType.builder(holder -> new SchoolResistanceData())
-                    .serialize(new IAttachmentSerializer<CompoundTag, SchoolResistanceData>() {
-                        @Override
-                        public SchoolResistanceData read(IAttachmentHolder holder, CompoundTag tag, HolderLookup.Provider provider) {
-                            return deserializeNBT(tag, provider);
-                        }
-                        @Override
-                        public CompoundTag write(SchoolResistanceData data, HolderLookup.Provider provider) {
-                            return data.serializeNBT(provider);
-                        }
-                    })
-                    .build());
 }

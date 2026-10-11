@@ -54,8 +54,4 @@ public final class CastData {
         reset();
         this.lastCastEndTick = currentTick;
     }
-    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
-            DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Miyabi.MODID);
-    public static final Supplier<AttachmentType<CastData>> CAST =
-            ATTACHMENT_TYPES.register("cast", () -> AttachmentType.builder(holder -> new CastData()).build());
 }

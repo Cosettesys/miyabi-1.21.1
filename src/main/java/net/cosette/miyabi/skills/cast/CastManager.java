@@ -1,5 +1,6 @@
 package net.cosette.miyabi.skills.cast;
 
+import net.cosette.miyabi.registry.ModAttachments;
 import net.cosette.miyabi.skills.magic.SpellDefinition;
 import net.cosette.miyabi.skills.magic.SpellProjectile;
 import net.cosette.miyabi.skills.SpellRegistry;
@@ -27,19 +28,19 @@ public final class CastManager {
     public static final float SILENT_CAST_SPEED_BONUS_PERCENT = 40f;
     /** Coût de base du sort, réduit par la maîtrise du joueur sur ce sort. */
     public static float effectiveManaCost(ServerPlayer player, SpellDefinition def) {
-        int casts = player.getData(PlayerProgressionData.PROGRESSION).getSpellCasts(def.id());
+        int casts = player.getData(ModAttachments.PROGRESSION).getSpellCasts(def.id());
         return def.manaCost() * MasteryEffects.manaCostMultiplier(casts);
     }
     /** Sort actuellement assigné à ce slot pour ce joueur, ou null si le slot est vide. */
     public static SpellDefinition spellInSlot(ServerPlayer player, int slot) {
-        String id = player.getData(SpellSlotsData.SPELL_SLOTS).getSpellId(slot);
+        String id = player.getData(ModAttachments.SPELL_SLOTS).getSpellId(slot);
         return id.isEmpty() ? null : SpellRegistry.byId(id);
     }
     public static int effectiveDurationTicks(ServerPlayer player, int slot, boolean silent) {
         SpellDefinition def = spellInSlot(player, slot);
         float base = (def != null) ? def.baseCastDurationTicks() : SpellSlots.durationTicks(slot);
         if (def != null) {
-            int casts = player.getData(PlayerProgressionData.PROGRESSION).getSpellCasts(def.id());
+            int casts = player.getData(ModAttachments.PROGRESSION).getSpellCasts(def.id());
             base *= MasteryEffects.castTimeMultiplier(casts);
         }
         if (silent) {
@@ -49,15 +50,15 @@ public final class CastManager {
     }
     public static void startCast(ServerPlayer player, CastData cast, int slot) {
         if (cast.isCasting()) return;
-        if (player.getData(MeditationData.MEDITATION).isMeditating()) return;
-        String slotId = player.getData(SpellSlotsData.SPELL_SLOTS).getSpellId(slot);
+        if (player.getData(ModAttachments.MEDITATION).isMeditating()) return;
+        String slotId = player.getData(ModAttachments.SPELL_SLOTS).getSpellId(slot);
         // Technique d'épée : pas besoin de mana éveillé, effet immédiat (provisoire).
         SwordTechniqueDefinition technique = SwordTechniqueRegistry.byId(slotId);
         if (technique != null) {
             useTechnique(player, technique);
             return;
         }
-        if (!player.getData(PlayerProgressionData.PROGRESSION).isManaAwakened()) {
+        if (!player.getData(ModAttachments.PROGRESSION).isManaAwakened()) {
             player.sendSystemMessage(Component.literal("Ton mana n'est pas éveillé."));
             return;
         }
@@ -66,12 +67,12 @@ public final class CastManager {
             player.sendSystemMessage(Component.literal("Aucun sort dans ce slot."));
             return;
         }
-        ManaData mana = player.getData(ManaData.MANA);
+        ManaData mana = player.getData(ModAttachments.MANA);
         if (mana.getCurrent() < effectiveManaCost(player, def)) {
             player.sendSystemMessage(Component.literal("Pas assez de mana pour ce sort."));
             return;
         }
-        boolean silent = player.getData(SilentCastData.SILENT_CAST).isEnabled();
+        boolean silent = player.getData(ModAttachments.SILENT_CAST).isEnabled();
         var pos = player.position();
         cast.start(slot, player.level().getGameTime(), silent, pos.x, pos.y, pos.z);
         applyMovementEffect(player, silent);
@@ -116,7 +117,7 @@ public final class CastManager {
         intensityPercent = Math.min(intensityPercent, def.maxIntensityPercent());
         // Le coût utilise la maîtrise AVANT ce lancer ; onSpellCast incrémente ensuite le compteur.
         float actualManaCost = effectiveManaCost(player, def) * (intensityPercent / 100f);
-        player.getData(ManaData.MANA).spend(actualManaCost);
+        player.getData(ModAttachments.MANA).spend(actualManaCost);
         MasteryManager.onSpellCast(player, def);
         var look = player.getLookAngle();
         float speed = def.computeSpeed();

@@ -1,5 +1,6 @@
 package net.cosette.miyabi.network.handler;
 
+import net.cosette.miyabi.registry.ModAttachments;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -16,7 +17,7 @@ public final class CastPacketHandlers {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
             if (payload.slot() < 0 || payload.slot() >= SpellSlots.COUNT) return;
-            CastData cast = player.getData(CastData.CAST);
+            CastData cast = player.getData(ModAttachments.CAST);
             switch (payload.action()) {
                 case CastInputPayload.ACTION_START -> CastManager.startCast(player, cast, payload.slot());
                 case CastInputPayload.ACTION_KEEPALIVE -> CastManager.keepAlive(player, cast, payload.slot());
@@ -28,12 +29,12 @@ public final class CastPacketHandlers {
     public static void onSilentCastToggle(SilentCastTogglePayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
-            CastData cast = player.getData(CastData.CAST);
+            CastData cast = player.getData(ModAttachments.CAST);
             if (cast.isCasting()) {
                 player.sendSystemMessage(Component.literal("Impossible de changer le silent cast pendant une incantation."));
                 return;
             }
-            SilentCastData data = player.getData(SilentCastData.SILENT_CAST);
+            SilentCastData data = player.getData(ModAttachments.SILENT_CAST);
             if (!data.isUnlocked()) {
                 player.sendSystemMessage(Component.literal("Silent cast non débloqué."));
                 return;

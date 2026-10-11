@@ -6,6 +6,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.cosette.miyabi.registry.ModAttachments;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -42,7 +43,7 @@ public final class ManaCommands {
 
     private static int get(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
-        ManaData data = player.getData(ManaData.MANA);
+        ManaData data = player.getData(ModAttachments.MANA);
         return CommandUtil.info(ctx, player.getName().getString() + " -> current=" + data.getCurrent()
                 + ", max=" + data.getMax()
                 + ", regenFlat=" + data.getRegenFlat()
@@ -51,7 +52,7 @@ public final class ManaCommands {
 
     private static int setIntField(CommandContext<CommandSourceStack> ctx, String field, int value) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
-        ManaData data = player.getData(ManaData.MANA);
+        ManaData data = player.getData(ModAttachments.MANA);
         switch (field) {
             case "current" -> data.setCurrent(value);
             case "max" -> data.setMax(value);
@@ -63,14 +64,14 @@ public final class ManaCommands {
     private static int setRegenScaling(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
         float value = FloatArgumentType.getFloat(ctx, "value");
-        player.getData(ManaData.MANA).setRegenScaling(value);
+        player.getData(ModAttachments.MANA).setRegenScaling(value);
         return CommandUtil.success(ctx, "regenScaling de " + player.getName().getString() + " -> " + value + "%");
     }
 
     private static int setDebugLog(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
         boolean enabled = BoolArgumentType.getBool(ctx, "enabled");
-        player.getData(ManaDebugData.MANA_DEBUG).setEnabled(enabled);
+        player.getData(ModAttachments.MANA_DEBUG).setEnabled(enabled);
         return CommandUtil.success(ctx, "Log mana " + (enabled ? "activé" : "désactivé") + " pour " + player.getName().getString());
     }
 }

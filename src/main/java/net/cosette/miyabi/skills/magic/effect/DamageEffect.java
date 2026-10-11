@@ -1,5 +1,6 @@
 package net.cosette.miyabi.skills.magic.effect;
 
+import net.cosette.miyabi.registry.ModAttachments;
 import net.cosette.miyabi.skills.damage.SchoolResistanceData;
 import net.cosette.miyabi.progression.PlayerProgressionData;
 import net.minecraft.core.registries.Registries;
@@ -26,13 +27,13 @@ public record DamageEffect(float baseDamage, PhysicalDamageType physicalType) im
     public void apply(Entity target, SpellDefinition definition, SpellCastContext context) {
         float rankMultiplier = 1.0f;
         if (context.caster() instanceof ServerPlayer casterPlayer) {
-            rankMultiplier = casterPlayer.getData(PlayerProgressionData.PROGRESSION)
+            rankMultiplier = casterPlayer.getData(ModAttachments.PROGRESSION)
                     .getSchoolRank(definition.school()).getDamageMultiplier();
         }
         float damage = baseDamage * definition.school().getDamageMultiplier() * definition.shape().getDamageMultiplier()
                 * physicalType.getDamageMultiplier() * (context.intensityPercent() / 100f) * rankMultiplier;
         if (context.silentCast()) damage *= 0.5f;
-        float resistance = target.getData(SchoolResistanceData.SCHOOL_RESISTANCE).getResistancePercent(definition.school());
+        float resistance = target.getData(ModAttachments.SCHOOL_RESISTANCE).getResistancePercent(definition.school());
         damage = Math.max(0f, damage * (1f - resistance / 100f));
         var damageTypeHolder = target.level().registryAccess()
                 .lookupOrThrow(Registries.DAMAGE_TYPE)
@@ -52,7 +53,7 @@ public record DamageEffect(float baseDamage, PhysicalDamageType physicalType) im
         target.hurt(source, damage);
         float healthAfter = target instanceof LivingEntity living ? living.getHealth() : 0f;
         if (context.caster() instanceof ServerPlayer caster
-                && caster.getData(DamageLogData.DAMAGE_LOG).isEnabled()
+                && caster.getData(ModAttachments.DAMAGE_LOG).isEnabled()
                 && target instanceof LivingEntity living) {
             float actualDamage = Math.max(0f, healthBefore - healthAfter);
             caster.sendSystemMessage(Component.literal(String.format(

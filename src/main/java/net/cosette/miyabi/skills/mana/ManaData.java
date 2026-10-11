@@ -95,22 +95,4 @@ public final class ManaData {
                 : REGEN_INTERVAL_TICKS;
         return data;
     }
-    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
-            DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Miyabi.MODID);
-    public static final Supplier<AttachmentType<ManaData>> MANA =
-            ATTACHMENT_TYPES.register("mana", () -> AttachmentType.builder(
-                            (holder) -> new ManaData(0f, 1, 0.5f) // était 100f : le mana n'existe qu'après l'éveil
-                    )
-                    .serialize(new IAttachmentSerializer<CompoundTag, ManaData>() {
-                        @Override
-                        public ManaData read(IAttachmentHolder holder, CompoundTag tag, HolderLookup.Provider provider) {
-                            return deserializeNBT(tag, provider);
-                        }
-                        @Override
-                        public CompoundTag write(ManaData data, HolderLookup.Provider provider) {
-                            return data.serializeNBT(provider);
-                        }
-                    })
-                    .copyOnDeath()
-                    .build());
 }

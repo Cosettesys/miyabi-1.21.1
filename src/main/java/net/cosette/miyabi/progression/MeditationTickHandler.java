@@ -1,5 +1,6 @@
 package net.cosette.miyabi.progression;
 
+import net.cosette.miyabi.registry.ModAttachments;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -13,9 +14,9 @@ public final class MeditationTickHandler {
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        MeditationData med = player.getData(MeditationData.MEDITATION);
+        MeditationData med = player.getData(ModAttachments.MEDITATION);
         if (!med.isMeditating()) return;
-        if (player.getData(CastData.CAST).isCasting()) {
+        if (player.getData(ModAttachments.CAST).isCasting()) {
             MeditationManager.stop(player, med, "incantation");
             return;
         }

@@ -12,10 +12,4 @@ public final class DamageLogData {
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
-
-    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES =
-            DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Miyabi.MODID);
-
-    public static final Supplier<AttachmentType<DamageLogData>> DAMAGE_LOG =
-            ATTACHMENT_TYPES.register("damage_log", () -> AttachmentType.builder(holder -> new DamageLogData()).build());
 }
