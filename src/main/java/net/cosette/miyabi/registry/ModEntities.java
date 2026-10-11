@@ -6,7 +6,7 @@ import net.minecraft.world.entity.MobCategory;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.cosette.miyabi.Miyabi;
-import net.cosette.miyabi.magic.spell.SpellProjectile;
+import net.cosette.miyabi.skills.magic.SpellProjectile;
 
 public final class ModEntities {
     private ModEntities() {}

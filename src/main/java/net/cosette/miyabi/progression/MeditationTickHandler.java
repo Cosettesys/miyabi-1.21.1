@@ -5,7 +5,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.cosette.miyabi.Miyabi;
-import net.cosette.miyabi.magic.CastData;
+import net.cosette.miyabi.skills.cast.CastData;
 
 @EventBusSubscriber(modid = Miyabi.MODID)
 public final class MeditationTickHandler {

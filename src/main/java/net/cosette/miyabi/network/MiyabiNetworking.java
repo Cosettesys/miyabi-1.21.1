@@ -5,6 +5,15 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.cosette.miyabi.Miyabi;
+import net.cosette.miyabi.network.payload.CastInputPayload;
+import net.cosette.miyabi.network.handler.CastPacketHandlers;
+import net.cosette.miyabi.network.payload.MeditationInputPayload;
+import net.cosette.miyabi.network.handler.MeditationPacketHandlers;
+import net.cosette.miyabi.network.payload.MenuDataPayload;
+import net.cosette.miyabi.network.handler.MenuPacketHandlers;
+import net.cosette.miyabi.network.payload.MenuRequestPayload;
+import net.cosette.miyabi.network.payload.SilentCastTogglePayload;
+import net.cosette.miyabi.network.payload.SlotAssignPayload;
 
 @EventBusSubscriber(modid = Miyabi.MODID)
 public final class MiyabiNetworking {

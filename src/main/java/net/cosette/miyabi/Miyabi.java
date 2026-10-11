@@ -1,6 +1,5 @@
 package net.cosette.miyabi;
 
-import net.cosette.miyabi.magic.*;
 import net.cosette.miyabi.progression.MeditationData;
 import net.cosette.miyabi.progression.PlayerProgressionData;
 import net.cosette.miyabi.registry.ModEntities;
@@ -32,6 +31,14 @@ import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import net.cosette.miyabi.skills.cast.CastData;
+import net.cosette.miyabi.skills.damage.DamageLogData;
+import net.cosette.miyabi.skills.mana.ManaData;
+import net.cosette.miyabi.skills.mana.ManaDebugData;
+import net.cosette.miyabi.skills.mana.MiyabiGameRules;
+import net.cosette.miyabi.skills.damage.SchoolResistanceData;
+import net.cosette.miyabi.skills.cast.SilentCastData;
+import net.cosette.miyabi.skills.cast.SpellSlotsData;
 
 @Mod(Miyabi.MODID)
 public class Miyabi {

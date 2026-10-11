@@ -8,7 +8,7 @@ import net.neoforged.neoforge.attachment.IAttachmentSerializer;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.cosette.miyabi.Miyabi;
-import net.cosette.miyabi.magic.spell.MagicSchool;
+import net.cosette.miyabi.skills.magic.MagicSchool;
 
 import java.util.Collections;
 import java.util.EnumMap;

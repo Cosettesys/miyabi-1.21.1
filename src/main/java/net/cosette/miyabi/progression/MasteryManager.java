@@ -2,8 +2,8 @@ package net.cosette.miyabi.progression;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.cosette.miyabi.magic.spell.MagicSchool;
-import net.cosette.miyabi.magic.spell.SpellDefinition;
+import net.cosette.miyabi.skills.magic.MagicSchool;
+import net.cosette.miyabi.skills.magic.SpellDefinition;
 
 public final class MasteryManager {
     private MasteryManager() {}

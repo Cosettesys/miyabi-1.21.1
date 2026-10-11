@@ -2,8 +2,8 @@ package net.cosette.miyabi.progression;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.cosette.miyabi.magic.CastData;
-import net.cosette.miyabi.magic.ManaData;
+import net.cosette.miyabi.skills.cast.CastData;
+import net.cosette.miyabi.skills.mana.ManaData;
 
 public final class MeditationManager {
     private MeditationManager() {}

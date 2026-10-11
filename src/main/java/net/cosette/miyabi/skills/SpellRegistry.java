@@ -1,6 +1,6 @@
 package net.cosette.miyabi.skills;
 
-import net.cosette.miyabi.magic.spell.SpellDefinition;
+import net.cosette.miyabi.skills.magic.SpellDefinition;
 import net.cosette.miyabi.skills.magic.earth.SlashingTest;
 import net.cosette.miyabi.skills.magic.fire.FireTestSpells;
 import net.cosette.miyabi.skills.magic.fire.Fireball;

@@ -1,10 +1,10 @@
 package net.cosette.miyabi.skills.magic.fire;
 
-import net.cosette.miyabi.magic.spell.DamageEffect;
-import net.cosette.miyabi.magic.spell.MagicSchool;
-import net.cosette.miyabi.magic.spell.SpellCategory;
-import net.cosette.miyabi.magic.spell.SpellDefinition;
-import net.cosette.miyabi.magic.spell.SpellShape;
+import net.cosette.miyabi.skills.magic.effect.DamageEffect;
+import net.cosette.miyabi.skills.magic.MagicSchool;
+import net.cosette.miyabi.skills.magic.SpellCategory;
+import net.cosette.miyabi.skills.magic.SpellDefinition;
+import net.cosette.miyabi.skills.magic.SpellShape;
 import net.cosette.miyabi.progression.MagicRank;
 
 import java.util.ArrayList;
