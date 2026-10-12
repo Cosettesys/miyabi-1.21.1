@@ -14,6 +14,8 @@ import net.cosette.miyabi.network.handler.MenuPacketHandlers;
 import net.cosette.miyabi.network.payload.MenuRequestPayload;
 import net.cosette.miyabi.network.payload.SilentCastTogglePayload;
 import net.cosette.miyabi.network.payload.SlotAssignPayload;
+import net.cosette.miyabi.network.handler.ManaSyncHandlers;
+import net.cosette.miyabi.network.payload.ManaSyncPayload;
 
 @EventBusSubscriber(modid = Miyabi.MODID)
 public final class MiyabiNetworking {
@@ -29,5 +31,6 @@ public final class MiyabiNetworking {
         registrar.playToServer(MenuRequestPayload.TYPE, MenuRequestPayload.STREAM_CODEC, MenuPacketHandlers::onMenuRequest);
         registrar.playToClient(MenuDataPayload.TYPE, MenuDataPayload.STREAM_CODEC, MenuPacketHandlers::onMenuData);
         registrar.playToServer(SlotAssignPayload.TYPE, SlotAssignPayload.STREAM_CODEC, MenuPacketHandlers::onSlotAssign);
+        registrar.playToClient(ManaSyncPayload.TYPE, ManaSyncPayload.STREAM_CODEC, ManaSyncHandlers::onManaSync);
     }
 }

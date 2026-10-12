@@ -74,6 +74,20 @@ public final class ManaData {
         current = Math.min(max, current + gain);
         ticksUntilNextRegen = REGEN_INTERVAL_TICKS;
     }
+    // --- Synchronisation vers le client (état du dernier envoi, non sauvegardé) ---
+    private float syncedCurrent = Float.NaN;
+    private float syncedMax = Float.NaN;
+    private boolean syncedAwakened = false;
+
+    public boolean needsSync(boolean awakened) {
+        return Float.isNaN(syncedCurrent) || syncedCurrent != current || syncedMax != max || syncedAwakened != awakened;
+    }
+
+    public void markSynced(boolean awakened) {
+        this.syncedCurrent = current;
+        this.syncedMax = max;
+        this.syncedAwakened = awakened;
+    }
     public CompoundTag serializeNBT(HolderLookup.Provider provider) {
         CompoundTag tag = new CompoundTag();
         tag.putFloat("current", current);
