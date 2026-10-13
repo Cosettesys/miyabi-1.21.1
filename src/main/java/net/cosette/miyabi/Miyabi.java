@@ -4,6 +4,7 @@ import net.cosette.miyabi.progression.MeditationData;
 import net.cosette.miyabi.progression.PlayerProgressionData;
 import net.cosette.miyabi.registry.ModAttachments;
 import net.cosette.miyabi.registry.ModEntities;
+import net.cosette.miyabi.registry.ModParticles;
 import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -67,6 +68,7 @@ public class Miyabi {
 
         ModAttachments.ATTACHMENT_TYPES.register(modEventBus);
         ModEntities.ENTITY_TYPES.register(modEventBus);
+        ModParticles.PARTICLE_TYPES.register(modEventBus);
         MiyabiGameRules.init();
 
         NeoForge.EVENT_BUS.register(this);

@@ -234,17 +234,13 @@ public class MiyabiMenuScreen extends Screen {
         if (selectedSchool == null) return;
         MenuDataPayload.SchoolEntry info = findSchool(selectedSchool);
         if (info != null) {
-            String progress = info.required() > 0
-                    ? " (maîtrise " + info.mastery() + "/" + info.required() + ")"
-                    : " (rang max)";
-            line(g, selectedSchool.name() + " : " + info.rank() + progress, x, top + 8, WHITE);
+            line(g, selectedSchool.name() + " : " + info.rank(), x, top + 8, WHITE);
         }
         List<ListEntry> entries = new ArrayList<>();
         for (MenuDataPayload.SpellEntry s : data.spells()) {
             if (!s.school().equals(selectedSchool.name())) continue;
-            entries.add(new ListEntry(s.id(), s.id() + " [" + s.rank() + "] "
-                    + s.casts() + "/" + MasteryManager.SPELL_MASTERY_CASTS
-                    + " - " + String.format("%.1f", s.manaCost()) + " mana"));
+            entries.add(new ListEntry(s.id(), s.id() + " [" + s.rank() + "] - "
+                    + String.format("%.1f", s.manaCost()) + " mana"));
         }
         renderEntries(g, x, entries, "Aucun sort pour cette école pour l'instant.");
         renderAssignFooter(g, x, "sort");

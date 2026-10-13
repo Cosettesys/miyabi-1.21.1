@@ -8,6 +8,8 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.cosette.miyabi.registry.ModAttachments;
+import net.cosette.miyabi.skills.SwordTechniqueRegistry;
+import net.cosette.miyabi.skills.swordtechniques.SwordTechniqueDefinition;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -22,7 +24,6 @@ import net.cosette.miyabi.skills.magic.MagicSchool;
 /** Branche /miyabi progression ... */
 public final class ProgressionCommands {
     private ProgressionCommands() {}
-
     public static LiteralArgumentBuilder<CommandSourceStack> branch() {
         return Commands.literal("progression")
                 .requires(CommandUtil::isOp)
@@ -53,17 +54,25 @@ public final class ProgressionCommands {
                                 .then(Commands.argument("spell", StringArgumentType.word())
                                         .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(SpellRegistry.ids(), builder))
                                         .then(Commands.argument("value", IntegerArgumentType.integer(0))
-                                                .executes(ProgressionCommands::setSpellCasts)))));
+                                                .executes(ProgressionCommands::setSpellCasts)))))                .then(Commands.literal("stylemastery")
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .then(CommandUtil.enumArg("style", SwordStyle.class)
+                                        .then(Commands.argument("value", IntegerArgumentType.integer(0))
+                                                .executes(ProgressionCommands::setStyleMastery)))))
+                .then(Commands.literal("techniqueuses")
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .then(Commands.argument("technique", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+                                                SwordTechniqueRegistry.all().stream().map(SwordTechniqueDefinition::id), builder))
+                                        .then(Commands.argument("value", IntegerArgumentType.integer(0))
+                                                .executes(ProgressionCommands::setTechniqueUses)))));
     }
-
     private static PlayerProgressionData data(ServerPlayer player) {
         return player.getData(ModAttachments.PROGRESSION);
     }
-
     private static int get(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
         PlayerProgressionData data = data(player);
-
         StringBuilder schools = new StringBuilder();
         for (MagicSchool school : MagicSchool.values()) {
             if (schools.length() > 0) schools.append(", ");
@@ -74,19 +83,26 @@ public final class ProgressionCommands {
                         .append("/").append(rank.getMasteryToNext()).append(")");
             }
         }
-
         StringBuilder styles = new StringBuilder();
         for (SwordStyle style : SwordStyle.values()) {
             if (styles.length() > 0) styles.append(", ");
-            styles.append(style.name()).append("=").append(data.getStyleRank(style).name());
+            MagicRank rank = data.getStyleRank(style);
+            styles.append(style.name()).append("=").append(rank.name());
+            if (rank.next() != null) {
+                styles.append(" (").append(data.getStyleMastery(style))
+                        .append("/").append(rank.getMasteryToNext()).append(")");
+            }
         }
-
         StringBuilder casts = new StringBuilder();
         for (var entry : data.getAllSpellCasts().entrySet()) {
             if (casts.length() > 0) casts.append(", ");
             casts.append(entry.getKey()).append("=").append(entry.getValue());
         }
-
+        StringBuilder uses = new StringBuilder();
+        for (var entry : data.getAllTechniqueUses().entrySet()) {
+            if (uses.length() > 0) uses.append(", ");
+            uses.append(entry.getKey()).append("=").append(entry.getValue());
+        }
         return CommandUtil.info(ctx, "Progression de " + player.getName().getString()
                 + "\nMana éveillé : " + data.isManaAwakened()
                 + " | Battle aura éveillée : " + data.isBattleAuraAwakened()
@@ -94,9 +110,9 @@ public final class ProgressionCommands {
                 + " | Progression d'éveil : " + data.getAwakeningProgress()
                 + "\nÉcoles : " + schools
                 + "\nStyles : " + styles
-                + "\nSorts lancés : " + (casts.length() == 0 ? "aucun" : casts));
+                + "\nSorts lancés : " + (casts.length() == 0 ? "aucun" : casts)
+                + "\nTechniques utilisées : " + (uses.length() == 0 ? "aucune" : uses));
     }
-
     private static int setSchoolRank(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
         MagicSchool school = CommandUtil.parseEnum(MagicSchool.class, StringArgumentType.getString(ctx, "school"));
@@ -107,7 +123,6 @@ public final class ProgressionCommands {
         data(player).setSchoolRank(school, rank);
         return CommandUtil.success(ctx, "Rang " + school.name() + " de " + player.getName().getString() + " -> " + rank.name());
     }
-
     private static int setStyleRank(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
         SwordStyle style = CommandUtil.parseEnum(SwordStyle.class, StringArgumentType.getString(ctx, "style"));
@@ -118,35 +133,30 @@ public final class ProgressionCommands {
         data(player).setStyleRank(style, rank);
         return CommandUtil.success(ctx, "Rang " + style.name() + " de " + player.getName().getString() + " -> " + rank.name());
     }
-
     private static int setManaAwakened(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
         boolean value = BoolArgumentType.getBool(ctx, "value");
         data(player).setManaAwakened(value);
         return CommandUtil.success(ctx, "Mana éveillé de " + player.getName().getString() + " -> " + value);
     }
-
     private static int setAuraAwakened(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
         boolean value = BoolArgumentType.getBool(ctx, "value");
         data(player).setBattleAuraAwakened(value);
         return CommandUtil.success(ctx, "Battle aura éveillée de " + player.getName().getString() + " -> " + value);
     }
-
     private static int setAuraLevel(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
         int value = IntegerArgumentType.getInteger(ctx, "value");
         data(player).setBattleAuraLevel(value);
         return CommandUtil.success(ctx, "Niveau de battle aura de " + player.getName().getString() + " -> " + value);
     }
-
     private static int setAwakeningProgress(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
         float value = FloatArgumentType.getFloat(ctx, "value");
         data(player).setAwakeningProgress(value);
         return CommandUtil.success(ctx, "Progression d'éveil de " + player.getName().getString() + " -> " + value);
     }
-
     private static int setMastery(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
         MagicSchool school = CommandUtil.parseEnum(MagicSchool.class, StringArgumentType.getString(ctx, "school"));
@@ -157,7 +167,6 @@ public final class ProgressionCommands {
         data(player).setSchoolMastery(school, value);
         return CommandUtil.success(ctx, "Maîtrise " + school.name() + " de " + player.getName().getString() + " -> " + value);
     }
-
     private static int setSpellCasts(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
         String spellId = StringArgumentType.getString(ctx, "spell");
@@ -167,5 +176,25 @@ public final class ProgressionCommands {
         }
         data(player).setSpellCasts(spellId, value);
         return CommandUtil.success(ctx, "Lancers de " + spellId + " pour " + player.getName().getString() + " -> " + value);
+    }
+    private static int setStyleMastery(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = CommandUtil.player(ctx);
+        SwordStyle style = CommandUtil.parseEnum(SwordStyle.class, StringArgumentType.getString(ctx, "style"));
+        int value = IntegerArgumentType.getInteger(ctx, "value");
+        if (style == null) {
+            return CommandUtil.fail(ctx, "Style inconnu.");
+        }
+        data(player).setStyleMastery(style, value);
+        return CommandUtil.success(ctx, "Maîtrise " + style.name() + " de " + player.getName().getString() + " -> " + value);
+    }
+    private static int setTechniqueUses(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = CommandUtil.player(ctx);
+        String techniqueId = StringArgumentType.getString(ctx, "technique");
+        int value = IntegerArgumentType.getInteger(ctx, "value");
+        if (SwordTechniqueRegistry.byId(techniqueId) == null) {
+            return CommandUtil.fail(ctx, "Technique inconnue : " + techniqueId);
+        }
+        data(player).setTechniqueUses(techniqueId, value);
+        return CommandUtil.success(ctx, "Utilisations de " + techniqueId + " pour " + player.getName().getString() + " -> " + value);
     }
 }

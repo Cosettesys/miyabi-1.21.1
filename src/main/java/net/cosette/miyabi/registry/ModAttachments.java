@@ -1,5 +1,7 @@
 package net.cosette.miyabi.registry;
 
+import net.cosette.miyabi.skills.cast.SlotHudSyncState;
+import net.cosette.miyabi.skills.swordtechniques.TechniqueCooldownData;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.neoforged.neoforge.attachment.AttachmentType;
@@ -45,7 +47,6 @@ public final class ModAttachments {
     public static final Supplier<AttachmentType<PlayerProgressionData>> PROGRESSION = persistent("progression",
             PlayerProgressionData::new,
             PlayerProgressionData::deserializeNBT, PlayerProgressionData::serializeNBT, true);
-
     // --- Sauvegardée mais remise à zéro à la mort ---
     public static final Supplier<AttachmentType<SchoolResistanceData>> SCHOOL_RESISTANCE = persistent("school_resistance",
             SchoolResistanceData::new,
@@ -55,6 +56,8 @@ public final class ModAttachments {
     public static final Supplier<AttachmentType<MeditationData>> MEDITATION = temporary("meditation", MeditationData::new);
     public static final Supplier<AttachmentType<ManaDebugData>> MANA_DEBUG = temporary("mana_debug", ManaDebugData::new);
     public static final Supplier<AttachmentType<DamageLogData>> DAMAGE_LOG = temporary("damage_log", DamageLogData::new);
+    public static final Supplier<AttachmentType<TechniqueCooldownData>> TECHNIQUE_COOLDOWN = temporary("technique_cooldown", TechniqueCooldownData::new);
+    public static final Supplier<AttachmentType<SlotHudSyncState>> SLOT_HUD_SYNC = temporary("slot_hud_sync", SlotHudSyncState::new);
     // --- Helpers ---
     private static <T> Supplier<AttachmentType<T>> persistent(
             String name, Supplier<T> factory,

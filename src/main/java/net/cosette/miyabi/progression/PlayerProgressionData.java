@@ -21,6 +21,8 @@ public final class PlayerProgressionData {
     private final Map<SwordStyle, MagicRank> styleRanks = new EnumMap<>(SwordStyle.class);
     private final Map<MagicSchool, Integer> schoolMastery = new EnumMap<>(MagicSchool.class);
     private final Map<String, Integer> spellCasts = new HashMap<>();
+    private final Map<SwordStyle, Integer> styleMastery = new EnumMap<>(SwordStyle.class);
+    private final Map<String, Integer> techniqueUses = new HashMap<>();
     private boolean manaAwakened = false;
     private boolean battleAuraAwakened = false;
     private int battleAuraLevel = 0;
@@ -57,7 +59,6 @@ public final class PlayerProgressionData {
     public void setSpellCasts(String spellId, int value) {
         spellCasts.put(spellId, Math.max(0, value));
     }
-    /** @return le nouveau total de lancers de ce sort. */
     public int incrementSpellCasts(String spellId) {
         int value = getSpellCasts(spellId) + 1;
         spellCasts.put(spellId, value);
@@ -65,6 +66,26 @@ public final class PlayerProgressionData {
     }
     public Map<String, Integer> getAllSpellCasts() {
         return Collections.unmodifiableMap(spellCasts);
+    }
+    public int getStyleMastery(SwordStyle style) {
+        return styleMastery.getOrDefault(style, 0);
+    }
+    public void setStyleMastery(SwordStyle style, int value) {
+        styleMastery.put(style, Math.max(0, value));
+    }
+    public int getTechniqueUses(String techniqueId) {
+        return techniqueUses.getOrDefault(techniqueId, 0);
+    }
+    public void setTechniqueUses(String techniqueId, int value) {
+        techniqueUses.put(techniqueId, Math.max(0, value));
+    }
+    public int incrementTechniqueUses(String techniqueId) {
+        int value = getTechniqueUses(techniqueId) + 1;
+        techniqueUses.put(techniqueId, value);
+        return value;
+    }
+    public Map<String, Integer> getAllTechniqueUses() {
+        return Collections.unmodifiableMap(techniqueUses);
     }
     // --- Sérialisation ---
     public CompoundTag serializeNBT(HolderLookup.Provider provider) {
@@ -93,6 +114,16 @@ public final class PlayerProgressionData {
             casts.putInt(entry.getKey(), entry.getValue());
         }
         tag.put("spellCasts", casts);
+        CompoundTag styleMasteryTag = new CompoundTag();
+        for (SwordStyle style : SwordStyle.values()) {
+            styleMasteryTag.putInt(style.name(), getStyleMastery(style));
+        }
+        tag.put("styleMastery", styleMasteryTag);
+        CompoundTag uses = new CompoundTag();
+        for (Map.Entry<String, Integer> entry : techniqueUses.entrySet()) {
+            uses.putInt(entry.getKey(), entry.getValue());
+        }
+        tag.put("techniqueUses", uses);
         return tag;
     }
     public static PlayerProgressionData deserializeNBT(CompoundTag tag, HolderLookup.Provider provider) {
@@ -122,6 +153,16 @@ public final class PlayerProgressionData {
         CompoundTag casts = tag.getCompound("spellCasts");
         for (String key : casts.getAllKeys()) {
             data.spellCasts.put(key, casts.getInt(key));
+        }
+        CompoundTag styleMasteryTag = tag.getCompound("styleMastery");
+        for (SwordStyle style : SwordStyle.values()) {
+            if (styleMasteryTag.contains(style.name())) {
+                data.styleMastery.put(style, styleMasteryTag.getInt(style.name()));
+            }
+        }
+        CompoundTag uses = tag.getCompound("techniqueUses");
+        for (String key : uses.getAllKeys()) {
+            data.techniqueUses.put(key, uses.getInt(key));
         }
         return data;
     }

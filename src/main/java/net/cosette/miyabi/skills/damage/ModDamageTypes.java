@@ -15,6 +15,7 @@ public final class ModDamageTypes {
     public static final ResourceKey<DamageType> WIND_MAGIC = key("wind_magic");
     public static final ResourceKey<DamageType> GRAVITY_MAGIC = key("gravity_magic");
     public static final ResourceKey<DamageType> ARCANE_MAGIC = key("arcane_magic");
+    public static final ResourceKey<DamageType> SWORD_TECHNIQUE = key("sword_technique");
     private static ResourceKey<DamageType> key(String name) {
         return ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath(Miyabi.MODID, name));
     }

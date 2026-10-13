@@ -19,8 +19,8 @@ public final class ManaHud {
     private static final ResourceLocation LAYER_ID = ResourceLocation.fromNamespaceAndPath(Miyabi.MODID, "mana_bar");
     private static final int BAR_WIDTH = 100;
     private static final int BAR_HEIGHT = 6;
-    private static final int MARGIN_LEFT = 8;
-    private static final int MARGIN_BOTTOM = 28; // distance entre le haut de la barre et le bas de l'écran
+    static final int MARGIN_LEFT = 8;
+    static final int MARGIN_BOTTOM = 28; // distance entre le haut de la barre et le bas de l'écran
     private static final int COLOR_BORDER = 0xFF000000;
     private static final int COLOR_BACKGROUND = 0xFF222222;
     private static final int COLOR_FILL = 0xFF3377FF;
@@ -50,7 +50,7 @@ public final class ManaHud {
         g.drawString(mc.font, format(current) + "/" + format(max), x, y + BAR_HEIGHT + 3, COLOR_TEXT);
     }
     /** Valeur exacte : entier si possible, sinon une décimale. */
-    private static String format(float value) {
+    static String format(float value) {
         return Math.abs(value - Math.round(value)) < 0.05f
                 ? String.valueOf(Math.round(value))
                 : String.format("%.1f", value);

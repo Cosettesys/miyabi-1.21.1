@@ -19,7 +19,7 @@ public final class CastTickHandler {
         CastData cast = player.getData(ModAttachments.CAST);
         if (!cast.isCasting()) return;
         if (!cast.isSilentAtStart()) {
-            player.connection.teleport(cast.getAnchorX(), cast.getAnchorY(), cast.getAnchorZ(), player.getYRot(), player.getXRot());
+            PositionLock.hold(player, cast.getAnchorX(), cast.getAnchorY(), cast.getAnchorZ());
         }
         long now = player.level().getGameTime();
         if (now - cast.getLastInputTick() > CastManager.KEEPALIVE_TIMEOUT_TICKS) {

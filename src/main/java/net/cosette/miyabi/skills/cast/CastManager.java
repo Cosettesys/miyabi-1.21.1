@@ -1,13 +1,11 @@
 package net.cosette.miyabi.skills.cast;
 
+import net.cosette.miyabi.progression.*;
 import net.cosette.miyabi.registry.ModAttachments;
 import net.cosette.miyabi.skills.magic.SpellDefinition;
 import net.cosette.miyabi.skills.magic.SpellProjectile;
 import net.cosette.miyabi.skills.SpellRegistry;
-import net.cosette.miyabi.progression.MasteryEffects;
-import net.cosette.miyabi.progression.MasteryManager;
-import net.cosette.miyabi.progression.MeditationData;
-import net.cosette.miyabi.progression.PlayerProgressionData;
+import net.cosette.miyabi.skills.swordtechniques.TechniqueManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,6 +24,8 @@ public final class CastManager {
     public static final float DAMAGE_INTERRUPT_LOSS_PERCENT = 25f;
     public static final int KEEPALIVE_TIMEOUT_TICKS = 15;
     public static final float SILENT_CAST_SPEED_BONUS_PERCENT = 40f;
+    /** Mana max gagné par point de mana dépensé en lançant un sort (valeur provisoire). */
+    public static final float MANA_MAX_GAIN_PER_MANA_SPENT = 0.02f;
     /** Coût de base du sort, réduit par la maîtrise du joueur sur ce sort. */
     public static float effectiveManaCost(ServerPlayer player, SpellDefinition def) {
         int casts = player.getData(ModAttachments.PROGRESSION).getSpellCasts(def.id());
@@ -55,7 +55,7 @@ public final class CastManager {
         // Technique d'épée : pas besoin de mana éveillé, effet immédiat (provisoire).
         SwordTechniqueDefinition technique = SwordTechniqueRegistry.byId(slotId);
         if (technique != null) {
-            useTechnique(player, technique);
+            TechniqueManager.use(player, technique);
             return;
         }
         if (!player.getData(ModAttachments.PROGRESSION).isManaAwakened()) {
@@ -117,7 +117,10 @@ public final class CastManager {
         intensityPercent = Math.min(intensityPercent, def.maxIntensityPercent());
         // Le coût utilise la maîtrise AVANT ce lancer ; onSpellCast incrémente ensuite le compteur.
         float actualManaCost = effectiveManaCost(player, def) * (intensityPercent / 100f);
-        player.getData(ModAttachments.MANA).spend(actualManaCost);
+        ManaData mana = player.getData(ModAttachments.MANA);
+        mana.spend(actualManaCost);
+        // Dépenser du mana fait lentement grandir la réserve (plafonné comme pour la méditation).
+        mana.setMax(Math.min(MeditationManager.MANA_HARD_CAP, mana.getMax() + actualManaCost * MANA_MAX_GAIN_PER_MANA_SPENT));
         MasteryManager.onSpellCast(player, def);
         var look = player.getLookAngle();
         float speed = def.computeSpeed();
