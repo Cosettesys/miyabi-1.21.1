@@ -12,7 +12,7 @@ import java.util.List;
 public record MenuDataPayload(
         String playerName, float mana, float maxMana, int auraLevel, boolean auraAwakened,
         List<SchoolEntry> schools, List<StyleEntry> styles, List<SpellEntry> spells,
-        List<TechniqueEntry> techniques, List<String> slots
+        List<TechniqueEntry> techniques, List<String> slots, List<Float> auraProgress
 ) implements CustomPacketPayload {
     public record SchoolEntry(String school, String rank, int mastery, int required) {}
     public record StyleEntry(String style, String rank) {}
@@ -58,6 +58,10 @@ public record MenuDataPayload(
         for (String id : p.slots()) {
             buf.writeUtf(id);
         }
+        buf.writeVarInt(p.auraProgress().size());
+        for (float ratio : p.auraProgress()) {
+            buf.writeFloat(ratio);
+        }
     }
     private static MenuDataPayload read(FriendlyByteBuf buf) {
         String name = buf.readUtf();
@@ -90,7 +94,12 @@ public record MenuDataPayload(
         for (int i = 0; i < slotCount; i++) {
             slots.add(buf.readUtf());
         }
-        return new MenuDataPayload(name, mana, maxMana, aura, auraAwakened, schools, styles, spells, techniques, slots);
+        int auraCount = buf.readVarInt();
+        List<Float> auraProgress = new ArrayList<>();
+        for (int i = 0; i < auraCount; i++) {
+            auraProgress.add(buf.readFloat());
+        }
+        return new MenuDataPayload(name, mana, maxMana, aura, auraAwakened, schools, styles, spells, techniques, slots, auraProgress);
     }
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }

@@ -1,6 +1,7 @@
 package net.cosette.miyabi.network.handler;
 
 import net.cosette.miyabi.registry.ModAttachments;
+import net.cosette.miyabi.skills.battleaura.BattleAuraManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -99,9 +100,10 @@ public final class MenuPacketHandlers {
         for (int i = 0; i < SpellSlots.COUNT; i++) {
             slots.add(slotData.getSpellId(i));
         }
+        List<Float> auraProgress = BattleAuraManager.progress(progression);
         PacketDistributor.sendToPlayer(player, new MenuDataPayload(
                 player.getName().getString(), mana.getCurrent(), mana.getMax(),
                 progression.getBattleAuraLevel(), progression.isBattleAuraAwakened(),
-                schools, styles, spells, techniques, slots));
+                schools, styles, spells, techniques, slots, auraProgress));
     }
 }

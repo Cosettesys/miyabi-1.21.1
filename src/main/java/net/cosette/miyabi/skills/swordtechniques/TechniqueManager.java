@@ -1,5 +1,7 @@
 package net.cosette.miyabi.skills.swordtechniques;
 
+import net.cosette.miyabi.progression.*;
+import net.cosette.miyabi.registry.ModTags;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -8,10 +10,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
-import net.cosette.miyabi.progression.MagicRank;
-import net.cosette.miyabi.progression.MasteryEffects;
-import net.cosette.miyabi.progression.MasteryManager;
-import net.cosette.miyabi.progression.PlayerProgressionData;
 import net.cosette.miyabi.registry.ModAttachments;
 import net.cosette.miyabi.registry.ModParticles;
 import net.cosette.miyabi.skills.damage.DamageResolver;
@@ -26,6 +24,11 @@ public final class TechniqueManager {
     private static final double SLASH_DISTANCE = 2.1;
     public static void use(ServerPlayer player, SwordTechniqueDefinition technique) {
         PlayerProgressionData progression = player.getData(ModAttachments.PROGRESSION);
+        // Les techniques du dieu de l'épée demandent une épée en main (détectée par un tag, donc compatible avec les mods).
+        if (technique.style() == SwordStyle.SWORD_GOD && !player.getMainHandItem().is(ModTags.SWORD_GOD_WEAPONS)) {
+            player.displayClientMessage(Component.literal("Il me faut une épée pour cette technique."), true);
+            return;
+        }
         // Les techniques de rang Avancé ou plus demandent la battle aura (donc le mana éveillé).
         if (technique.rank().isAtLeast(MagicRank.ADVANCED) && !progression.isBattleAuraAwakened()) {
             player.displayClientMessage(Component.literal("Mon corps n'est pas assez fort pour cette technique."), true);

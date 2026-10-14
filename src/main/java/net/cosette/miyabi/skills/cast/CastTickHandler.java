@@ -40,15 +40,15 @@ public final class CastTickHandler {
         float achievableIntensity = Math.max(100f, Math.min(maxIntensity, manaLimitedIntensity));
         int maxProgressTicks = Math.round(duration * (achievableIntensity / 100f));
 
-        if (cast.getProgressTicks() < maxProgressTicks) {
+        // Au-delà de 100 %, la charge ne monte que si le joueur est accroupi : on peut ainsi lancer à 100 % pile.
+        int limit = player.isShiftKeyDown() ? maxProgressTicks : Math.min(maxProgressTicks, duration);
+        if (cast.getProgressTicks() < limit) {
             cast.addProgress(1);
         }
-        if (cast.getProgressTicks() % 20 == 0) {
+        // Message au-dessus de la hotbar, rafraîchi quatre fois par seconde pour qu'il reste affiché pendant la pause à 100 %.
+        if (now % 5 == 0) {
             int percent = (int) ((cast.getProgressTicks() * 100L) / duration);
-            if (percent != cast.getLastAnnouncedPercent()) {
-                cast.setLastAnnouncedPercent(percent);
-                player.sendSystemMessage(Component.literal("Incantation chargée à " + percent + "%"));
-            }
+            player.displayClientMessage(Component.literal("Incantation chargée à " + percent + "%"), true);
         }
     }
 }

@@ -1,5 +1,7 @@
 package net.cosette.miyabi.client.screen;
 
+import net.cosette.miyabi.skills.battleaura.AuraCriterion;
+import net.cosette.miyabi.skills.battleaura.BattleAuraLevels;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -19,7 +21,7 @@ import net.cosette.miyabi.client.input.ClientMenuHandler;
 import net.cosette.miyabi.client.input.MiyabiKeyMappings;
 
 public class MiyabiMenuScreen extends Screen {
-    private enum View { MAIN, MAGIC_SCHOOLS, MAGIC_LIST, SWORD_STYLES, SWORD_LIST }
+    private enum View { MAIN, MAGIC_SCHOOLS, MAGIC_LIST, SWORD_STYLES, SWORD_LIST, AURA }
     private record ListEntry(String id, String text) {}
     private record EntryRow(String id, int x1, int y1, int x2, int y2) {}
     private static final int PANEL_W = 400;
@@ -39,6 +41,7 @@ public class MiyabiMenuScreen extends Screen {
     private Button magicButton;
     private Button swordButton;
     private Button backButton;
+    private Button auraButton;
     private final List<Button> slotButtons = new ArrayList<>();
     private final List<Button> schoolButtons = new ArrayList<>();
     private final List<Button> styleButtons = new ArrayList<>();
@@ -89,8 +92,11 @@ public class MiyabiMenuScreen extends Screen {
                 .bounds(left + 10, mainY, 190, 20).build();
         swordButton = Button.builder(Component.literal("Techniques d'épée"), b -> goTo(View.SWORD_STYLES))
                 .bounds(left + PANEL_W - 200, mainY, 190, 20).build();
+        auraButton = Button.builder(Component.literal("Battle aura"), b -> goTo(View.AURA))
+                .bounds(left + 10, mainY, 100, 20).build();
         addRenderableWidget(magicButton);
         addRenderableWidget(swordButton);
+        addRenderableWidget(auraButton); // position et largeur réglées dans refreshButtons
         // Retour (tous les sous-menus)
         backButton = Button.builder(Component.literal("Retour"), b -> goBack())
                 .bounds(left + 10, mainY, 190, 20).build();
@@ -100,10 +106,10 @@ public class MiyabiMenuScreen extends Screen {
         MagicSchool[] schools = MagicSchool.values();
         for (int i = 0; i < schools.length; i++) {
             final MagicSchool school = schools[i];
-            int col = i % 2;
-            int row = i / 2;
+            int col = i % 3;
+            int row = i / 3;
             Button b = Button.builder(Component.literal(school.name()), btn -> selectSchool(school))
-                    .bounds(left + 10 + col * 195, top + 24 + row * 26, 185, 20).build();
+                    .bounds(left + 10 + col * 130, top + 24 + row * 26, 120, 20).build();
             schoolButtons.add(b);
             addRenderableWidget(b);
         }
@@ -113,7 +119,7 @@ public class MiyabiMenuScreen extends Screen {
         for (int i = 0; i < styles.length; i++) {
             final SwordStyle style = styles[i];
             Button b = Button.builder(Component.literal(style.name()), btn -> selectStyle(style))
-                    .bounds(left + 10, top + 24 + i * 26, 380, 20).build();
+                    .bounds(left + 10, top + 24 + i * 26, 160, 20).build();
             styleButtons.add(b);
             addRenderableWidget(b);
         }
@@ -165,8 +171,14 @@ public class MiyabiMenuScreen extends Screen {
     }
     private void refreshButtons() {
         boolean main = (view == View.MAIN);
-        magicButton.visible = main;
-        swordButton.visible = main;
+        // Le bouton Battle aura n'existe qu'une fois l'aura éveillée : les boutons se partagent la largeur.
+        boolean aura = data.auraAwakened();
+        int gap = 8;
+        int count = aura ? 3 : 2;
+        int width = (PANEL_W - 20 - gap * (count - 1)) / count;
+        layoutMainButton(magicButton, 0, width, gap, main);
+        layoutMainButton(swordButton, 1, width, gap, main);
+        layoutMainButton(auraButton, 2, width, gap, main && aura);
         backButton.visible = !main;
         MagicSchool[] schools = MagicSchool.values();
         for (int i = 0; i < schoolButtons.size(); i++) {
@@ -185,6 +197,33 @@ public class MiyabiMenuScreen extends Screen {
         for (Button b : slotButtons) {
             b.visible = isList();
         }
+    }
+    private void layoutMainButton(Button button, int index, int width, int gap, boolean visible) {
+        button.setX(left + 10 + index * (width + gap));
+        button.setWidth(width);
+        button.visible = visible;
+    }
+    /** Écran de la battle aura : quatre jauges sans valeurs chiffrées. */
+    private void renderAura(GuiGraphics g, int x) {
+        int y = top + 8;
+        y = line(g, "Battle aura : niveau " + data.auraLevel(), x, y, WHITE);
+        if (data.auraLevel() >= BattleAuraLevels.MAX_LEVEL) {
+            line(g, "Mon corps a atteint sa limite.", x, y + 4, GREY);
+            return;
+        }
+        y += 8;
+        AuraCriterion[] criteria = AuraCriterion.values();
+        for (int i = 0; i < criteria.length; i++) {
+            float ratio = i < data.auraProgress().size() ? Mth.clamp(data.auraProgress().get(i), 0f, 1f) : 0f;
+            g.drawString(this.font, criteria[i].getLabel(), x, y, WHITE);
+            int barX = x + 170;
+            int barWidth = 150;
+            g.fill(barX - 1, y - 1, barX + barWidth + 1, y + 9, 0xFF000000);
+            g.fill(barX, y, barX + barWidth, y + 8, 0xFF333333);
+            g.fill(barX, y, barX + Math.round(barWidth * ratio), y + 8, ratio >= 1f ? 0xFF55DD55 : 0xFFCC9933);
+            y += 18;
+        }
+        line(g, "Je dois renforcer au moins trois de ces domaines pour progresser.", x, y + 6, GREY);
     }
     private MenuDataPayload.SchoolEntry findSchool(MagicSchool school) {
         for (MenuDataPayload.SchoolEntry e : data.schools()) {
@@ -215,10 +254,12 @@ public class MiyabiMenuScreen extends Screen {
             case MAGIC_LIST -> renderMagicList(g, x);
             case SWORD_STYLES -> line(g, "Styles de combat", x, top + 8, WHITE);
             case SWORD_LIST -> renderSwordList(g, x);
+            case AURA -> renderAura(g, x);
         }
         magicButton.render(g, mouseX, mouseY, partialTick);
         swordButton.render(g, mouseX, mouseY, partialTick);
         backButton.render(g, mouseX, mouseY, partialTick);
+        auraButton.render(g, mouseX, mouseY, partialTick);
         for (Button b : schoolButtons) if (b.visible) b.render(g, mouseX, mouseY, partialTick);
         for (Button b : styleButtons) if (b.visible) b.render(g, mouseX, mouseY, partialTick);
         for (Button b : slotButtons) if (b.visible) b.render(g, mouseX, mouseY, partialTick);

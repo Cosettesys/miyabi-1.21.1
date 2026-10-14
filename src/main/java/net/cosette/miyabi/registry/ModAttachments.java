@@ -1,5 +1,6 @@
 package net.cosette.miyabi.registry;
 
+import net.cosette.miyabi.skills.battleaura.AuraTrackerState;
 import net.cosette.miyabi.skills.cast.SlotHudSyncState;
 import net.cosette.miyabi.skills.swordtechniques.TechniqueCooldownData;
 import net.minecraft.core.HolderLookup;
@@ -35,18 +36,18 @@ public final class ModAttachments {
     public static final Supplier<AttachmentType<ManaData>> MANA = persistent("mana",
             () -> new ManaData(0f, 1, 0.5f), // le mana n'existe qu'après l'éveil
             ManaData::deserializeNBT, ManaData::serializeNBT, true);
-
     public static final Supplier<AttachmentType<SilentCastData>> SILENT_CAST = persistent("silent_cast",
             SilentCastData::new,
             SilentCastData::deserializeNBT, SilentCastData::serializeNBT, true);
-
     public static final Supplier<AttachmentType<SpellSlotsData>> SPELL_SLOTS = persistent("spell_slots",
             SpellSlotsData::new,
             SpellSlotsData::deserializeNBT, SpellSlotsData::serializeNBT, true);
-
     public static final Supplier<AttachmentType<PlayerProgressionData>> PROGRESSION = persistent("progression",
             PlayerProgressionData::new,
             PlayerProgressionData::deserializeNBT, PlayerProgressionData::serializeNBT, true);
+    public static final Supplier<AttachmentType<TechniqueCooldownData>> TECHNIQUE_COOLDOWN = persistent("technique_cooldown",
+            TechniqueCooldownData::new,
+            TechniqueCooldownData::deserializeNBT, TechniqueCooldownData::serializeNBT, true);
     // --- Sauvegardée mais remise à zéro à la mort ---
     public static final Supplier<AttachmentType<SchoolResistanceData>> SCHOOL_RESISTANCE = persistent("school_resistance",
             SchoolResistanceData::new,
@@ -56,8 +57,8 @@ public final class ModAttachments {
     public static final Supplier<AttachmentType<MeditationData>> MEDITATION = temporary("meditation", MeditationData::new);
     public static final Supplier<AttachmentType<ManaDebugData>> MANA_DEBUG = temporary("mana_debug", ManaDebugData::new);
     public static final Supplier<AttachmentType<DamageLogData>> DAMAGE_LOG = temporary("damage_log", DamageLogData::new);
-    public static final Supplier<AttachmentType<TechniqueCooldownData>> TECHNIQUE_COOLDOWN = temporary("technique_cooldown", TechniqueCooldownData::new);
     public static final Supplier<AttachmentType<SlotHudSyncState>> SLOT_HUD_SYNC = temporary("slot_hud_sync", SlotHudSyncState::new);
+    public static final Supplier<AttachmentType<AuraTrackerState>> AURA_TRACKER = temporary("aura_tracker", AuraTrackerState::new);
     // --- Helpers ---
     private static <T> Supplier<AttachmentType<T>> persistent(
             String name, Supplier<T> factory,

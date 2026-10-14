@@ -1,14 +1,12 @@
 package net.cosette.miyabi.command;
 
-import com.mojang.brigadier.arguments.BoolArgumentType;
-import com.mojang.brigadier.arguments.FloatArgumentType;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.arguments.*;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.cosette.miyabi.registry.ModAttachments;
 import net.cosette.miyabi.skills.SwordTechniqueRegistry;
+import net.cosette.miyabi.skills.battleaura.AuraCriterion;
 import net.cosette.miyabi.skills.swordtechniques.SwordTechniqueDefinition;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -65,7 +63,11 @@ public final class ProgressionCommands {
                                         .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
                                                 SwordTechniqueRegistry.all().stream().map(SwordTechniqueDefinition::id), builder))
                                         .then(Commands.argument("value", IntegerArgumentType.integer(0))
-                                                .executes(ProgressionCommands::setTechniqueUses)))));
+                                                .executes(ProgressionCommands::setTechniqueUses)))))                .then(Commands.literal("auracounter")
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .then(CommandUtil.enumArg("criterion", AuraCriterion.class)
+                                        .then(Commands.argument("value", DoubleArgumentType.doubleArg(0))
+                                                .executes(ProgressionCommands::setAuraCounter)))));
     }
     private static PlayerProgressionData data(ServerPlayer player) {
         return player.getData(ModAttachments.PROGRESSION);
@@ -103,6 +105,11 @@ public final class ProgressionCommands {
             if (uses.length() > 0) uses.append(", ");
             uses.append(entry.getKey()).append("=").append(entry.getValue());
         }
+        StringBuilder counters = new StringBuilder();
+        for (AuraCriterion criterion : AuraCriterion.values()) {
+            if (counters.length() > 0) counters.append(", ");
+            counters.append(criterion.name()).append("=").append(String.format("%.0f", data.getAuraCounter(criterion)));
+        }
         return CommandUtil.info(ctx, "Progression de " + player.getName().getString()
                 + "\nMana éveillé : " + data.isManaAwakened()
                 + " | Battle aura éveillée : " + data.isBattleAuraAwakened()
@@ -111,7 +118,8 @@ public final class ProgressionCommands {
                 + "\nÉcoles : " + schools
                 + "\nStyles : " + styles
                 + "\nSorts lancés : " + (casts.length() == 0 ? "aucun" : casts)
-                + "\nTechniques utilisées : " + (uses.length() == 0 ? "aucune" : uses));
+                + "\nTechniques utilisées : " + (uses.length() == 0 ? "aucune" : uses)
+                + "\nCompteurs d'aura : " + counters);
     }
     private static int setSchoolRank(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
@@ -196,5 +204,15 @@ public final class ProgressionCommands {
         }
         data(player).setTechniqueUses(techniqueId, value);
         return CommandUtil.success(ctx, "Utilisations de " + techniqueId + " pour " + player.getName().getString() + " -> " + value);
+    }
+    private static int setAuraCounter(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = CommandUtil.player(ctx);
+        AuraCriterion criterion = CommandUtil.parseEnum(AuraCriterion.class, StringArgumentType.getString(ctx, "criterion"));
+        double value = DoubleArgumentType.getDouble(ctx, "value");
+        if (criterion == null) {
+            return CommandUtil.fail(ctx, "Critère inconnu.");
+        }
+        data(player).setAuraCounter(criterion, value);
+        return CommandUtil.success(ctx, "Compteur " + criterion.name() + " de " + player.getName().getString() + " -> " + value);
     }
 }

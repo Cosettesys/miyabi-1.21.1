@@ -1,5 +1,6 @@
 package net.cosette.miyabi.progression;
 
+import net.cosette.miyabi.skills.battleaura.AuraCriterion;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.neoforged.neoforge.attachment.AttachmentType;
@@ -24,7 +25,7 @@ public final class PlayerProgressionData {
     private final Map<SwordStyle, Integer> styleMastery = new EnumMap<>(SwordStyle.class);
     private final Map<String, Integer> techniqueUses = new HashMap<>();
     private boolean manaAwakened = false;
-    private boolean battleAuraAwakened = false;
+    private final Map<AuraCriterion, Double> auraCounters = new EnumMap<>(AuraCriterion.class);
     private int battleAuraLevel = 0;
     private float awakeningProgress = 0f;
     public float getAwakeningProgress() { return awakeningProgress; }
@@ -43,8 +44,8 @@ public final class PlayerProgressionData {
     }
     public boolean isManaAwakened() { return manaAwakened; }
     public void setManaAwakened(boolean value) { this.manaAwakened = value; }
-    public boolean isBattleAuraAwakened() { return battleAuraAwakened; }
-    public void setBattleAuraAwakened(boolean value) { this.battleAuraAwakened = value; }
+    public boolean isBattleAuraAwakened() { return battleAuraLevel >= 1; }
+    public void setBattleAuraAwakened(boolean value) { this.battleAuraLevel = value ? Math.max(1, battleAuraLevel) : 0; }
     public int getBattleAuraLevel() { return battleAuraLevel; }
     public void setBattleAuraLevel(int level) { this.battleAuraLevel = Math.max(0, level); }
     public int getSchoolMastery(MagicSchool school) {
@@ -101,7 +102,6 @@ public final class PlayerProgressionData {
         }
         tag.put("styles", styles);
         tag.putBoolean("manaAwakened", manaAwakened);
-        tag.putBoolean("battleAuraAwakened", battleAuraAwakened);
         tag.putInt("battleAuraLevel", battleAuraLevel);
         tag.putFloat("awakeningProgress", awakeningProgress);
         CompoundTag mastery = new CompoundTag();
@@ -124,6 +124,11 @@ public final class PlayerProgressionData {
             uses.putInt(entry.getKey(), entry.getValue());
         }
         tag.put("techniqueUses", uses);
+        CompoundTag counters = new CompoundTag();
+        for (AuraCriterion criterion : AuraCriterion.values()) {
+            counters.putDouble(criterion.name(), getAuraCounter(criterion));
+        }
+        tag.put("auraCounters", counters);
         return tag;
     }
     public static PlayerProgressionData deserializeNBT(CompoundTag tag, HolderLookup.Provider provider) {
@@ -141,7 +146,6 @@ public final class PlayerProgressionData {
             }
         }
         data.manaAwakened = tag.getBoolean("manaAwakened");
-        data.battleAuraAwakened = tag.getBoolean("battleAuraAwakened");
         data.battleAuraLevel = tag.getInt("battleAuraLevel");
         data.awakeningProgress = tag.getFloat("awakeningProgress");
         CompoundTag mastery = tag.getCompound("schoolMastery");
@@ -164,6 +168,28 @@ public final class PlayerProgressionData {
         for (String key : uses.getAllKeys()) {
             data.techniqueUses.put(key, uses.getInt(key));
         }
+
+        CompoundTag counters = tag.getCompound("auraCounters");
+        for (AuraCriterion criterion : AuraCriterion.values()) {
+            if (counters.contains(criterion.name())) {
+                data.auraCounters.put(criterion, counters.getDouble(criterion.name()));
+            }
+        }
+        // Anciennes sauvegardes : l'éveil était un booléen séparé du niveau.
+        if (tag.getBoolean("battleAuraAwakened") && data.battleAuraLevel < 1) {
+            data.battleAuraLevel = 1;
+        }
         return data;
+    }
+    public double getAuraCounter(AuraCriterion criterion) {
+        return auraCounters.getOrDefault(criterion, 0.0);
+    }
+
+    public void setAuraCounter(AuraCriterion criterion, double value) {
+        auraCounters.put(criterion, Math.max(0.0, value));
+    }
+
+    public void addAuraCounter(AuraCriterion criterion, double amount) {
+        auraCounters.put(criterion, getAuraCounter(criterion) + amount);
     }
 }
