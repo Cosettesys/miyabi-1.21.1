@@ -8,6 +8,7 @@ import net.cosette.miyabi.registry.ModAttachments;
 import net.cosette.miyabi.skills.SwordTechniqueRegistry;
 import net.cosette.miyabi.skills.battleaura.AuraCriterion;
 import net.cosette.miyabi.skills.swordtechniques.SwordTechniqueDefinition;
+import net.cosette.miyabi.util.Chat;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -67,7 +68,15 @@ public final class ProgressionCommands {
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(CommandUtil.enumArg("criterion", AuraCriterion.class)
                                         .then(Commands.argument("value", DoubleArgumentType.doubleArg(0))
-                                                .executes(ProgressionCommands::setAuraCounter)))));
+                                                .executes(ProgressionCommands::setAuraCounter)))))                .then(Commands.literal("spelllearning")
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .then(Commands.argument("spell", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(SpellRegistry.ids(), builder))
+                                        .then(Commands.argument("value", FloatArgumentType.floatArg(-1f, 100f))
+                                                .executes(ProgressionCommands::setSpellLearning)))))
+                .then(Commands.literal("learnall")
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .executes(ProgressionCommands::learnAll)));
     }
     private static PlayerProgressionData data(ServerPlayer player) {
         return player.getData(ModAttachments.PROGRESSION);
@@ -79,47 +88,53 @@ public final class ProgressionCommands {
         for (MagicSchool school : MagicSchool.values()) {
             if (schools.length() > 0) schools.append(", ");
             MagicRank rank = data.getSchoolRank(school);
-            schools.append(school.name()).append("=").append(rank.name());
+            schools.append(Chat.school(school)).append("=").append(Chat.rank(rank));
             if (rank.next() != null) {
-                schools.append(" (").append(data.getSchoolMastery(school))
-                        .append("/").append(rank.getMasteryToNext()).append(")");
+                schools.append(Chat.dim(" (" + data.getSchoolMastery(school) + "/" + rank.getMasteryToNext() + ")"));
             }
         }
         StringBuilder styles = new StringBuilder();
         for (SwordStyle style : SwordStyle.values()) {
             if (styles.length() > 0) styles.append(", ");
             MagicRank rank = data.getStyleRank(style);
-            styles.append(style.name()).append("=").append(rank.name());
+            styles.append(Chat.style(style)).append("=").append(Chat.rank(rank));
             if (rank.next() != null) {
-                styles.append(" (").append(data.getStyleMastery(style))
-                        .append("/").append(rank.getMasteryToNext()).append(")");
+                styles.append(Chat.dim(" (" + data.getStyleMastery(style) + "/" + rank.getMasteryToNext() + ")"));
             }
         }
         StringBuilder casts = new StringBuilder();
         for (var entry : data.getAllSpellCasts().entrySet()) {
             if (casts.length() > 0) casts.append(", ");
-            casts.append(entry.getKey()).append("=").append(entry.getValue());
+            casts.append(Chat.dim(entry.getKey())).append("=").append(Chat.mana(entry.getValue()));
         }
         StringBuilder uses = new StringBuilder();
         for (var entry : data.getAllTechniqueUses().entrySet()) {
             if (uses.length() > 0) uses.append(", ");
-            uses.append(entry.getKey()).append("=").append(entry.getValue());
+            uses.append(Chat.dim(entry.getKey())).append("=").append(Chat.mana(entry.getValue()));
         }
         StringBuilder counters = new StringBuilder();
         for (AuraCriterion criterion : AuraCriterion.values()) {
             if (counters.length() > 0) counters.append(", ");
-            counters.append(criterion.name()).append("=").append(String.format("%.0f", data.getAuraCounter(criterion)));
+            counters.append(Chat.dim(criterion.name())).append("=")
+                    .append(Chat.aura(String.format("%.0f", data.getAuraCounter(criterion))));
         }
-        return CommandUtil.info(ctx, "Progression de " + player.getName().getString()
-                + "\nMana éveillé : " + data.isManaAwakened()
-                + " | Battle aura éveillée : " + data.isBattleAuraAwakened()
-                + " | Niveau d'aura : " + data.getBattleAuraLevel()
-                + " | Progression d'éveil : " + data.getAwakeningProgress()
-                + "\nÉcoles : " + schools
-                + "\nStyles : " + styles
-                + "\nSorts lancés : " + (casts.length() == 0 ? "aucun" : casts)
-                + "\nTechniques utilisées : " + (uses.length() == 0 ? "aucune" : uses)
-                + "\nCompteurs d'aura : " + counters);
+        StringBuilder learning = new StringBuilder();
+        for (var entry : data.getAllSpellLearning().entrySet()) {
+            if (learning.length() > 0) learning.append(", ");
+            learning.append(Chat.dim(entry.getKey())).append("=")
+                    .append(entry.getValue() >= 100f ? Chat.good("appris") : Chat.mana(String.format("%.0f%%", entry.getValue())));
+        }
+        return CommandUtil.info(ctx, Chat.title("Progression de " + player.getName().getString())
+                + "\n" + Chat.label("Mana éveillé") + " : " + Chat.bool(data.isManaAwakened())
+                + " | " + Chat.label("Battle aura éveillée") + " : " + Chat.bool(data.isBattleAuraAwakened())
+                + " | " + Chat.label("Niveau d'aura") + " : " + Chat.aura(data.getBattleAuraLevel())
+                + " | " + Chat.label("Progression d'éveil") + " : " + Chat.mana(data.getAwakeningProgress())
+                + "\n" + Chat.label("Écoles") + " : " + schools
+                + "\n" + Chat.label("Styles") + " : " + styles
+                + "\n" + Chat.label("Sorts lancés") + " : " + (casts.length() == 0 ? Chat.dim("aucun") : casts)
+                + "\n" + Chat.label("Apprentissage") + " : " + (learning.length() == 0 ? Chat.dim("aucun sort débloqué") : learning)
+                + "\n" + Chat.label("Techniques utilisées") + " : " + (uses.length() == 0 ? Chat.dim("aucune") : uses)
+                + "\n" + Chat.label("Compteurs d'aura") + " : " + counters);
     }
     private static int setSchoolRank(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer player = CommandUtil.player(ctx);
@@ -214,5 +229,23 @@ public final class ProgressionCommands {
         }
         data(player).setAuraCounter(criterion, value);
         return CommandUtil.success(ctx, "Compteur " + criterion.name() + " de " + player.getName().getString() + " -> " + value);
+    }
+    private static int setSpellLearning(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = CommandUtil.player(ctx);
+        String spellId = StringArgumentType.getString(ctx, "spell");
+        float value = FloatArgumentType.getFloat(ctx, "value");
+        if (SpellRegistry.byId(spellId) == null) {
+            return CommandUtil.fail(ctx, "Sort inconnu : " + spellId);
+        }
+        data(player).setSpellLearning(spellId, value);
+        return CommandUtil.success(ctx, "Apprentissage de " + spellId + " pour " + player.getName().getString()
+                + " -> " + (value < 0 ? "verrouillé" : value + "%"));
+    }
+    private static int learnAll(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = CommandUtil.player(ctx);
+        for (String id : SpellRegistry.ids()) {
+            data(player).setSpellLearning(id, 100f);
+        }
+        return CommandUtil.success(ctx, "Tous les sorts sont appris pour " + player.getName().getString());
     }
 }

@@ -39,3 +39,54 @@ run/
 repo/
 !**/src/**/repo/
 /src/main/resources/assets/miyabi/textures/
+/runs/client/saves/Test multi/playerdata/2a717c8f-118e-3474-bc2d-d61b924015ff.dat
+/runs/client/saves/Test multi/playerdata/2a717c8f-118e-3474-bc2d-d61b924015ff.dat_old
+/runs/client/saves/Test multi/advancements/2a717c8f-118e-3474-bc2d-d61b924015ff.json
+/runs/client/saves/Test multi/stats/2a717c8f-118e-3474-bc2d-d61b924015ff.json
+/runs/client/saves/Test multi/playerdata/21cc3e25-481e-3cfa-8770-c5693a3e93a4.dat
+/runs/client/saves/Test multi/playerdata/21cc3e25-481e-3cfa-8770-c5693a3e93a4.dat_old
+/runs/client/saves/Test multi/advancements/21cc3e25-481e-3cfa-8770-c5693a3e93a4.json
+/runs/client/saves/Test multi/stats/21cc3e25-481e-3cfa-8770-c5693a3e93a4.json
+/runs/client/command_history.txt
+/runs/client/logs/debug.log
+/runs/client2/logs/debug.log
+/runs/client/config/fml.toml
+/runs/client2/config/fml.toml
+/runs/client/saves/Test multi/icon.png
+/runs/client/logs/latest.log
+/runs/client2/logs/latest.log
+/runs/client/saves/Test multi/level.dat
+/runs/client/saves/Test multi/level.dat_old
+/runs/client/downloads/log.json
+/runs/client2/downloads/log.json
+/runs/client/config/miyabi-common.toml
+/runs/client2/config/miyabi-common.toml
+/runs/client/config/neoforge-client.toml
+/runs/client2/config/neoforge-client.toml
+/runs/client/config/neoforge-common.toml
+/runs/client2/config/neoforge-common.toml
+/runs/client/config/neoforge-server.toml
+/runs/client/saves/Test multi/data/neoforge_data_attachments.dat
+/runs/client/saves/Test multi/DIM1/data/neoforge_data_attachments.dat
+/runs/client/saves/Test multi/DIM-1/data/neoforge_data_attachments.dat
+/runs/client/options.txt
+/runs/client2/options.txt
+/runs/client/saves/Test multi/entities/r.0.0.mca
+/runs/client/saves/Test multi/region/r.0.0.mca
+/runs/client/saves/Test multi/entities/r.0.-1.mca
+/runs/client/saves/Test multi/poi/r.0.-1.mca
+/runs/client/saves/Test multi/region/r.0.-1.mca
+/runs/client/saves/Test multi/entities/r.-1.0.mca
+/runs/client/saves/Test multi/region/r.-1.0.mca
+/runs/client/saves/Test multi/entities/r.-1.-1.mca
+/runs/client/saves/Test multi/poi/r.-1.-1.mca
+/runs/client/saves/Test multi/region/r.-1.-1.mca
+/runs/client/saves/Test multi/data/raids.dat
+/runs/client/saves/Test multi/DIM-1/data/raids.dat
+/runs/client/saves/Test multi/DIM1/data/raids_end.dat
+/runs/client/saves/Test multi/serverconfig/readme.txt
+/runs/client2/servers.dat
+/runs/client2/servers.dat_old
+/runs/client/saves/Test multi/session.lock
+/runs/client/usercache.json
+/runs/client/usernamecache.json

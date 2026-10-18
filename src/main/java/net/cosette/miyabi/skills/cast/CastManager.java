@@ -2,6 +2,7 @@ package net.cosette.miyabi.skills.cast;
 
 import net.cosette.miyabi.progression.*;
 import net.cosette.miyabi.registry.ModAttachments;
+import net.cosette.miyabi.registry.ModAttributes;
 import net.cosette.miyabi.skills.magic.SpellDefinition;
 import net.cosette.miyabi.skills.magic.SpellProjectile;
 import net.cosette.miyabi.skills.SpellRegistry;
@@ -11,10 +12,16 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.phys.Vec3;
 import net.cosette.miyabi.Miyabi;
 import net.cosette.miyabi.skills.swordtechniques.SwordTechniqueDefinition;
 import net.cosette.miyabi.skills.SwordTechniqueRegistry;
 import net.cosette.miyabi.skills.mana.ManaData;
+import net.cosette.miyabi.util.Chat;
+import net.cosette.miyabi.skills.learning.SpellLearning;
+import net.cosette.miyabi.skills.magic.SpellCastContext;
+import net.cosette.miyabi.skills.magic.effect.DamageEffect;
 
 public final class CastManager {
     private CastManager() {}
@@ -29,7 +36,7 @@ public final class CastManager {
     /** Coût de base du sort, réduit par la maîtrise du joueur sur ce sort. */
     public static float effectiveManaCost(ServerPlayer player, SpellDefinition def) {
         int casts = player.getData(ModAttachments.PROGRESSION).getSpellCasts(def.id());
-        return def.manaCost() * MasteryEffects.manaCostMultiplier(casts);
+        return def.manaCost() * MasteryEffects.manaCostMultiplier(casts) * StaffBonuses.costMultiplier(player, def.school());
     }
     /** Sort actuellement assigné à ce slot pour ce joueur, ou null si le slot est vide. */
     public static SpellDefinition spellInSlot(ServerPlayer player, int slot) {
@@ -46,6 +53,8 @@ public final class CastManager {
         if (silent) {
             base *= (1f - SILENT_CAST_SPEED_BONUS_PERCENT / 100f);
         }
+        // Vitesse d'incantation (bâtons, effets...) : 2 = deux fois plus vite, donc temps divisé par deux.
+        base /= (float) Math.max(0.1, player.getAttributeValue(ModAttributes.CASTING_SPEED));
         return Math.max(1, Math.round(base));
     }
     public static void startCast(ServerPlayer player, CastData cast, int slot) {
@@ -59,20 +68,27 @@ public final class CastManager {
             return;
         }
         if (!player.getData(ModAttachments.PROGRESSION).isManaAwakened()) {
-            player.sendSystemMessage(Component.literal("Ton mana n'est pas éveillé."));
+            player.sendSystemMessage(Component.literal("Ton " + Chat.mana("mana") + " n'est " + Chat.bad("pas éveillé") + "."));
             return;
         }
         SpellDefinition def = spellInSlot(player, slot);
         if (def == null) {
-            player.sendSystemMessage(Component.literal("Aucun sort dans ce slot."));
+            player.sendSystemMessage(Component.literal(Chat.bad("Aucun sort") + " dans ce slot."));
             return;
         }
+        PlayerProgressionData progression = player.getData(ModAttachments.PROGRESSION);
+        if (!progression.isSpellUnlocked(def.id())) {
+            player.sendSystemMessage(Component.literal("Je " + Chat.bad("ne connais pas") + " ce sort."));
+            return;
+        }
+
         ManaData mana = player.getData(ModAttachments.MANA);
         if (mana.getCurrent() < effectiveManaCost(player, def)) {
-            player.sendSystemMessage(Component.literal("Pas assez de mana pour ce sort."));
+            player.sendSystemMessage(Component.literal("Pas assez de " + Chat.mana("mana") + " pour ce sort."));
             return;
         }
-        boolean silent = player.getData(ModAttachments.SILENT_CAST).isEnabled();
+        // Un sort pas encore appris ne peut pas être lancé en silent cast.
+        boolean silent = player.getData(ModAttachments.SILENT_CAST).isEnabled() && progression.isSpellLearned(def.id());
         var pos = player.position();
         cast.start(slot, player.level().getGameTime(), silent, pos.x, pos.y, pos.z);
         applyMovementEffect(player, silent);
@@ -99,7 +115,7 @@ public final class CastManager {
         if (!cast.isCasting()) return;
         clearMovementEffect(player);
         cast.end(player.level().getGameTime());
-        player.sendSystemMessage(Component.literal("Incantation annulée (" + reason + ")."));
+        player.sendSystemMessage(Component.literal("Incantation " + Chat.bad("annulée") + " (" + reason + ")."));
     }
     public static void finishCast(ServerPlayer player, CastData cast) {
         int slot = cast.getSlot();
@@ -112,27 +128,77 @@ public final class CastManager {
             player.sendSystemMessage(Component.literal("Sort du slot " + (slot + 1) + " lancé (placeholder, pas encore d'effet)."));
             return;
         }
+        PlayerProgressionData progression = player.getData(ModAttachments.PROGRESSION);
+        ManaData mana = player.getData(ModAttachments.MANA);
+        RandomSource random = player.getRandom();
         int duration = effectiveDurationTicks(player, slot, silent);
         float intensityPercent = Math.max(100f, (progressTicks * 100f) / duration);
         intensityPercent = Math.min(intensityPercent, def.maxIntensityPercent());
         // Le coût utilise la maîtrise AVANT ce lancer ; onSpellCast incrémente ensuite le compteur.
-        float actualManaCost = effectiveManaCost(player, def) * (intensityPercent / 100f);
-        ManaData mana = player.getData(ModAttachments.MANA);
-        mana.spend(actualManaCost);
-        // Dépenser du mana fait lentement grandir la réserve (plafonné comme pour la méditation).
-        mana.setMax(Math.min(MeditationManager.MANA_HARD_CAP, mana.getMax() + actualManaCost * MANA_MAX_GAIN_PER_MANA_SPENT));
-        MasteryManager.onSpellCast(player, def);
-        var look = player.getLookAngle();
+        float manaCost = effectiveManaCost(player, def) * (intensityPercent / 100f);
+        boolean learned = progression.isSpellLearned(def.id());
+        SpellLearning.Debuffs debuffs = SpellLearning.Debuffs.NONE;
+        if (!learned) {
+            // Chaque tentative fait monter la jauge d'apprentissage, qu'elle réussisse ou non.
+            float gaugeBefore = progression.getSpellLearning(def.id());
+            float gaugeAfter = Math.min(SpellLearning.LEARNED,
+                    gaugeBefore + SpellLearning.gaugeGain(progression.getSchoolRank(def.school()), def.rank()));
+            progression.setSpellLearning(def.id(), gaugeAfter);
+            if (gaugeAfter >= SpellLearning.LEARNED) {
+                player.sendSystemMessage(Component.literal("J'ai " + Chat.good("appris") + " "
+                        + Chat.school(def.school()) + " : " + Chat.good(def.id()) + " !"));
+            }
+            if (random.nextFloat() >= SpellLearning.successChance(gaugeBefore)) {
+                spendMana(mana, manaCost); // un échec consomme quand même le mana
+                player.sendSystemMessage(Component.literal("Le sort " + Chat.bad("échoue") + "."));
+                return;
+            }
+            debuffs = SpellLearning.rollDebuffs(random, def.effect() instanceof DamageEffect);
+            if (debuffs.any()) {
+                player.sendSystemMessage(Component.literal(
+                        "Le sort est " + Chat.bad("instable") + " : " + debuffs.describe() + "."));
+            }
+        }
+        if (debuffs.doubledMana()) {
+            manaCost *= 2f;
+        }
+        if (mana.getCurrent() < manaCost) {
+            // Pas assez de mana pour le coût doublé : le sort ne part pas, et le mana restant est perdu.
+            spendMana(mana, mana.getCurrent());
+            player.sendSystemMessage(Component.literal("Je n'ai pas assez de " + Chat.mana("mana")
+                    + " : le sort " + Chat.bad("s'éteint") + "."));
+            return;
+        }
+        spendMana(mana, manaCost);
+        if (learned) {
+            MasteryManager.onSpellCast(player, def);
+        }
+        Vec3 direction = player.getLookAngle();
+        if (debuffs.deviated()) {
+            direction = SpellLearning.deviate(direction, random);
+        }
+        float effectScale = debuffs.halvedEffect() ? 0.5f : 1.0f;
         float speed = def.computeSpeed();
         SpellProjectile projectile = new SpellProjectile(
-                player.level(), player, look.x * speed, look.y * speed, look.z * speed,
-                def.id(), silent, intensityPercent);
+                player.level(), player, direction.x * speed, direction.y * speed, direction.z * speed,
+                def.id(), silent, intensityPercent, effectScale);
         player.level().addFreshEntity(projectile);
+        if (debuffs.selfDamage()) {
+            // Retour de flamme : le sort touche aussi son lanceur.
+            float selfScale = SpellLearning.SELF_DAMAGE_FRACTION * effectScale;
+            def.effect().apply(player, def, new SpellCastContext(player, player, silent, intensityPercent, selfScale));
+        }
+        SpellLearning.unlockForWitnesses(player, def);
+    }
+    /** Dépense du mana ; la réserve grandit lentement (plafonnée comme pour la méditation). */
+    private static void spendMana(ManaData mana, float amount) {
+        mana.spend(amount);
+        mana.setMax(Math.min(MeditationManager.MANA_HARD_CAP, mana.getMax() + amount * MANA_MAX_GAIN_PER_MANA_SPENT));
     }
     public static void interruptByDamage(ServerPlayer player, CastData cast) {
         if (!cast.isCasting() || cast.isSilentAtStart()) return;
         cast.reduceProgressByPercent(DAMAGE_INTERRUPT_LOSS_PERCENT);
-        player.sendSystemMessage(Component.literal("Incantation perturbée !"));
+        player.sendSystemMessage(Component.literal("Incantation " + Chat.bad("perturbée") + " !"));
     }
     private static void applyMovementEffect(ServerPlayer player, boolean silent) {
         if (!silent) return;

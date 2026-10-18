@@ -1,6 +1,7 @@
 package net.cosette.miyabi.registry;
 
 import net.cosette.miyabi.skills.battleaura.AuraTrackerState;
+import net.cosette.miyabi.skills.battleaura.BattleAuraBuffData;
 import net.cosette.miyabi.skills.cast.SlotHudSyncState;
 import net.cosette.miyabi.skills.swordtechniques.TechniqueCooldownData;
 import net.minecraft.core.HolderLookup;
@@ -48,6 +49,9 @@ public final class ModAttachments {
     public static final Supplier<AttachmentType<TechniqueCooldownData>> TECHNIQUE_COOLDOWN = persistent("technique_cooldown",
             TechniqueCooldownData::new,
             TechniqueCooldownData::deserializeNBT, TechniqueCooldownData::serializeNBT, true);
+    public static final Supplier<AttachmentType<BattleAuraBuffData>> AURA_BUFF = persistent("aura_buff",
+            BattleAuraBuffData::new,
+            BattleAuraBuffData::deserializeNBT, BattleAuraBuffData::serializeNBT, true);
     // --- Sauvegardée mais remise à zéro à la mort ---
     public static final Supplier<AttachmentType<SchoolResistanceData>> SCHOOL_RESISTANCE = persistent("school_resistance",
             SchoolResistanceData::new,

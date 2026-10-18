@@ -14,11 +14,12 @@ public class SpellProjectile extends AbstractHurtingProjectile {
     private String spellId = "fireball";
     private boolean silentCast = false;
     private float intensityPercent = 100f;
+    private float effectScale = 1.0f;
     public SpellProjectile(EntityType<? extends SpellProjectile> type, Level level) {
         super(type, level);
     }
     public SpellProjectile(Level level, LivingEntity shooter, double dx, double dy, double dz,
-                           String spellId, boolean silentCast, float intensityPercent) {
+                           String spellId, boolean silentCast, float intensityPercent, float effectScale) {
         super(ModEntities.SPELL_PROJECTILE.get(),
                 shooter.getX(), shooter.getEyeY() - 0.1, shooter.getZ(),
                 new Vec3(dx, dy, dz), level);
@@ -26,6 +27,7 @@ public class SpellProjectile extends AbstractHurtingProjectile {
         this.spellId = spellId;
         this.silentCast = silentCast;
         this.intensityPercent = intensityPercent;
+        this.effectScale = effectScale;
     }
     public String getSpellId() { return spellId; }
     private SpellDefinition definition() {
@@ -38,7 +40,7 @@ public class SpellProjectile extends AbstractHurtingProjectile {
         SpellDefinition def = definition();
         if (def == null) return;
         LivingEntity caster = getOwner() instanceof LivingEntity le ? le : null;
-        SpellCastContext context = new SpellCastContext(caster, this, silentCast, intensityPercent);
+        SpellCastContext context = new SpellCastContext(caster, this, silentCast, intensityPercent, effectScale);
         def.effect().apply(result.getEntity(), def, context);
     }
     @Override

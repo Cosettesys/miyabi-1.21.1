@@ -48,6 +48,8 @@ public final class PlayerProgressionData {
     public void setBattleAuraAwakened(boolean value) { this.battleAuraLevel = value ? Math.max(1, battleAuraLevel) : 0; }
     public int getBattleAuraLevel() { return battleAuraLevel; }
     public void setBattleAuraLevel(int level) { this.battleAuraLevel = Math.max(0, level); }
+    /** Jauge d'apprentissage des sorts : absent = pas débloqué, 0 à 99 = à apprendre, 100 = appris. */
+    private final Map<String, Float> spellLearning = new HashMap<>();
     public int getSchoolMastery(MagicSchool school) {
         return schoolMastery.getOrDefault(school, 0);
     }
@@ -88,6 +90,30 @@ public final class PlayerProgressionData {
     public Map<String, Integer> getAllTechniqueUses() {
         return Collections.unmodifiableMap(techniqueUses);
     }
+    public boolean isSpellUnlocked(String spellId) {
+        return spellLearning.containsKey(spellId);
+    }
+    public float getSpellLearning(String spellId) {
+        return spellLearning.getOrDefault(spellId, 0f);
+    }
+    public boolean isSpellLearned(String spellId) {
+        return getSpellLearning(spellId) >= 100f;
+    }
+    /** Débloque le sort (le rend visible et assignable) sans le faire progresser. */
+    public void unlockSpell(String spellId) {
+        spellLearning.putIfAbsent(spellId, 0f);
+    }
+    /** Fixe la jauge d'apprentissage (0 à 100) ; une valeur négative reverrouille le sort. */
+    public void setSpellLearning(String spellId, float value) {
+        if (value < 0f) {
+            spellLearning.remove(spellId);
+        } else {
+            spellLearning.put(spellId, Math.min(100f, value));
+        }
+    }
+    public Map<String, Float> getAllSpellLearning() {
+        return Collections.unmodifiableMap(spellLearning);
+    }
     // --- Sérialisation ---
     public CompoundTag serializeNBT(HolderLookup.Provider provider) {
         CompoundTag tag = new CompoundTag();
@@ -124,6 +150,11 @@ public final class PlayerProgressionData {
             uses.putInt(entry.getKey(), entry.getValue());
         }
         tag.put("techniqueUses", uses);
+        CompoundTag learning = new CompoundTag();
+        for (Map.Entry<String, Float> entry : spellLearning.entrySet()) {
+            learning.putFloat(entry.getKey(), entry.getValue());
+        }
+        tag.put("spellLearning", learning);
         CompoundTag counters = new CompoundTag();
         for (AuraCriterion criterion : AuraCriterion.values()) {
             counters.putDouble(criterion.name(), getAuraCounter(criterion));
@@ -168,7 +199,16 @@ public final class PlayerProgressionData {
         for (String key : uses.getAllKeys()) {
             data.techniqueUses.put(key, uses.getInt(key));
         }
-
+        CompoundTag learning = tag.getCompound("spellLearning");
+        for (String key : learning.getAllKeys()) {
+            data.spellLearning.put(key, learning.getFloat(key));
+        }
+        // Anciennes sauvegardes : un sort déjà lancé est considéré comme appris.
+        for (Map.Entry<String, Integer> entry : data.spellCasts.entrySet()) {
+            if (entry.getValue() > 0) {
+                data.spellLearning.putIfAbsent(entry.getKey(), 100f);
+            }
+        }
         CompoundTag counters = tag.getCompound("auraCounters");
         for (AuraCriterion criterion : AuraCriterion.values()) {
             if (counters.contains(criterion.name())) {

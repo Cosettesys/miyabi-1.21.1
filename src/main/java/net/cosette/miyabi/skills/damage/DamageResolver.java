@@ -1,5 +1,6 @@
 package net.cosette.miyabi.skills.damage;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.CombatRules;
@@ -37,8 +38,12 @@ public final class DamageResolver {
                 && player.getData(ModAttachments.DAMAGE_LOG).isEnabled()
                 && target instanceof LivingEntity living) {
             float actualDamage = Math.max(0f, healthBefore - living.getHealth());
-            player.sendSystemMessage(Component.literal(String.format(
-                    "%s (%s) a réussi à faire %.2f dégâts sur %s, PV restants : %.2f/%.1f (armure ignorée : %.0f%%)",
+            String format = ChatFormatting.GOLD + "%s" + ChatFormatting.RESET + " (%s) a réussi à faire "
+                    + ChatFormatting.RED + "%.2f" + ChatFormatting.RESET + " dégâts sur "
+                    + ChatFormatting.YELLOW + "%s" + ChatFormatting.RESET + ", PV restants : "
+                    + ChatFormatting.GREEN + "%.2f/%.1f" + ChatFormatting.RESET + " (armure ignorée : "
+                    + ChatFormatting.AQUA + "%.0f%%" + ChatFormatting.RESET + ")";
+            player.sendSystemMessage(Component.literal(String.format(format,
                     logLabel, physicalType.name(), actualDamage, target.getName().getString(),
                     living.getHealth(), living.getMaxHealth(), physicalType.getArmorPenetrationPercent())));
         }

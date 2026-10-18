@@ -24,14 +24,12 @@ public record DamageEffect(float baseDamage, PhysicalDamageType physicalType) im
             rankMultiplier = casterPlayer.getData(ModAttachments.PROGRESSION)
                     .getSchoolRank(definition.school()).getDamageMultiplier();
         }
-
         float damage = baseDamage * definition.school().getDamageMultiplier() * definition.shape().getDamageMultiplier()
                 * physicalType.getDamageMultiplier() * (context.intensityPercent() / 100f) * rankMultiplier;
         if (context.silentCast()) damage *= 0.5f;
-
+        damage *= context.effectScale(); // sort mal appris : effet divisé par 2
         float resistance = target.getData(ModAttachments.SCHOOL_RESISTANCE).getResistancePercent(definition.school());
         damage = Math.max(0f, damage * (1f - resistance / 100f));
-
         var damageTypeHolder = target.level().registryAccess()
                 .lookupOrThrow(Registries.DAMAGE_TYPE)
                 .getOrThrow(ModDamageTypes.forSchool(definition.school()));

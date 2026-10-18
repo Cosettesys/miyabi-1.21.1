@@ -24,5 +24,7 @@ public final class MiyabiNetworking {
         registrar.playToServer(SlotAssignPayload.TYPE, SlotAssignPayload.STREAM_CODEC, MenuPacketHandlers::onSlotAssign);
         registrar.playToClient(ManaSyncPayload.TYPE, ManaSyncPayload.STREAM_CODEC, ManaSyncHandlers::onManaSync);
         registrar.playToClient(SlotHudPayload.TYPE, SlotHudPayload.STREAM_CODEC, SlotHudHandlers::onSlotHud);
+        registrar.playToServer(AuraInputPayload.TYPE, AuraInputPayload.STREAM_CODEC, AuraPacketHandlers::onAuraInput);
+        registrar.playToClient(AuraStatePayload.TYPE, AuraStatePayload.STREAM_CODEC, AuraPacketHandlers::onAuraState);
     }
 }

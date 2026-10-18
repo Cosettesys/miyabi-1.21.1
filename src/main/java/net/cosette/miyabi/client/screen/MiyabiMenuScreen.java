@@ -22,7 +22,7 @@ import net.cosette.miyabi.client.input.MiyabiKeyMappings;
 
 public class MiyabiMenuScreen extends Screen {
     private enum View { MAIN, MAGIC_SCHOOLS, MAGIC_LIST, SWORD_STYLES, SWORD_LIST, AURA }
-    private record ListEntry(String id, String text) {}
+    private record ListEntry(String id, String text, boolean dim) {}
     private record EntryRow(String id, int x1, int y1, int x2, int y2) {}
     private static final int PANEL_W = 400;
     private static final int PANEL_MAX_H = 250;
@@ -30,6 +30,7 @@ public class MiyabiMenuScreen extends Screen {
     private static final int WHITE = 0xFFFFFFFF;
     private static final int GREY = 0xFFCCCCCC;
     private static final int YELLOW = 0xFFFFFF55;
+    private static final int DIM = 0xFF999999; // sort débloqué mais pas encore appris
     private MenuDataPayload data;
     private View view = View.MAIN;
     private MagicSchool selectedSchool = null;
@@ -280,8 +281,7 @@ public class MiyabiMenuScreen extends Screen {
         List<ListEntry> entries = new ArrayList<>();
         for (MenuDataPayload.SpellEntry s : data.spells()) {
             if (!s.school().equals(selectedSchool.name())) continue;
-            entries.add(new ListEntry(s.id(), s.id() + " [" + s.rank() + "] - "
-                    + String.format("%.1f", s.manaCost()) + " mana"));
+            entries.add(new ListEntry(s.id(), s.id() + " [" + s.rank() + "] - " + String.format("%.1f", s.manaCost()) + " mana", !s.learned()));
         }
         renderEntries(g, x, entries, "Aucun sort pour cette école pour l'instant.");
         renderAssignFooter(g, x, "sort");
@@ -295,7 +295,7 @@ public class MiyabiMenuScreen extends Screen {
         List<ListEntry> entries = new ArrayList<>();
         for (MenuDataPayload.TechniqueEntry t : data.techniques()) {
             if (!t.style().equals(selectedStyle.name())) continue;
-            entries.add(new ListEntry(t.id(), t.id() + " [" + t.rank() + "]"));
+            entries.add(new ListEntry(t.id(), t.id() + " [" + t.rank() + "]", false));
         }
         renderEntries(g, x, entries, "Aucune technique pour ce style pour l'instant.");
         renderAssignFooter(g, x, "technique");
@@ -318,7 +318,7 @@ public class MiyabiMenuScreen extends Screen {
             }
             entryRows.add(new EntryRow(e.id(), x - 2, rowY - 1, rowRight, rowY + LINE_H - 1));
 
-            line(g, e.text() + slotLabel, x + 4, rowY, selected ? YELLOW : WHITE);
+            line(g, e.text() + slotLabel, x + 4, rowY, selected ? YELLOW : (e.dim() ? DIM : WHITE));
         }
         drawScrollbar(g, entries.size());
     }

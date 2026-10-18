@@ -4,6 +4,7 @@ import net.cosette.miyabi.skills.magic.SpellDefinition;
 import net.cosette.miyabi.skills.magic.earth.SlashingTest;
 import net.cosette.miyabi.skills.magic.fire.FireTestSpells;
 import net.cosette.miyabi.skills.magic.fire.Fireball;
+import net.cosette.miyabi.skills.magic.water.AquaStaffTest;
 import net.cosette.miyabi.skills.magic.water.BluntTest;
 import net.cosette.miyabi.skills.magic.water.WaterTestSpells;
 import net.cosette.miyabi.skills.magic.wind.PiercingTest;
@@ -23,6 +24,7 @@ public final class SpellRegistry {
         register(BluntTest.DEFINITION);
         register(SlashingTest.DEFINITION);
         register(PiercingTest.DEFINITION);
+        register(AquaStaffTest.DEFINITION);
 
         // Sorts factices pour tester le menu. À supprimer plus tard.
         FireTestSpells.all().forEach(SpellRegistry::register);

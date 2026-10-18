@@ -7,6 +7,7 @@ import net.cosette.miyabi.registry.ModAttachments;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.cosette.miyabi.util.Chat;
 
 public final class BattleAuraManager {
     private BattleAuraManager() {}
@@ -45,7 +46,7 @@ public final class BattleAuraManager {
         if (conditionsMet(data, target) >= BattleAuraLevels.REQUIRED_CONDITIONS) {
             data.setBattleAuraLevel(target);
             player.sendSystemMessage(Component.literal(
-                    target == 1 ? "Je sens mon corps plus fort maintenant." : "Mon corps se renforce."));
+                    target == 1 ? "Je sens mon corps " + Chat.aura("plus fort") + " maintenant." : "Mon corps se " + Chat.aura("renforce") + "."));
         }
     }
 }

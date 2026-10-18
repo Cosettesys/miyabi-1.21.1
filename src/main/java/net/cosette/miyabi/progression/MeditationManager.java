@@ -5,6 +5,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.cosette.miyabi.skills.cast.CastData;
 import net.cosette.miyabi.skills.mana.ManaData;
+import net.cosette.miyabi.util.Chat;
 
 public final class MeditationManager {
     private MeditationManager() {}
@@ -24,18 +25,18 @@ public final class MeditationManager {
         if (med.isMeditating()) return;
         if (player.getData(ModAttachments.CAST).isCasting()) return;
         if (!player.onGround()) {
-            player.sendSystemMessage(Component.literal("Tu dois être au sol pour méditer."));
+            player.sendSystemMessage(Component.literal("Tu dois être " + Chat.bad("au sol") + " pour méditer."));
             return;
         }
         PlayerProgressionData progression = player.getData(ModAttachments.PROGRESSION);
         if (progression.isManaAwakened()
                 && player.getData(ModAttachments.MANA).getCurrent() < MANA_COST_PER_SECOND) {
-            player.sendSystemMessage(Component.literal("Pas assez de mana pour méditer."));
+            player.sendSystemMessage(Component.literal("Pas assez de " + Chat.mana("mana") + " pour méditer."));
             return;
         }
         var pos = player.position();
         med.start(player.level().getGameTime(), pos.x, pos.y, pos.z);
-        player.sendSystemMessage(Component.literal("Tu commences à méditer."));
+        player.sendSystemMessage(Component.literal("Tu commences à " + Chat.mana("méditer") + "."));
     }
     public static void keepAlive(ServerPlayer player, MeditationData med) {
         if (!med.isMeditating()) return;
@@ -44,7 +45,7 @@ public final class MeditationManager {
     public static void stop(ServerPlayer player, MeditationData med, String reason) {
         if (!med.isMeditating()) return;
         med.stop();
-        player.sendSystemMessage(Component.literal("Méditation terminée (" + reason + ")."));
+        player.sendSystemMessage(Component.literal("Méditation " + Chat.dim("terminée") + " (" + reason + ")."));
     }
     /** Appelée une fois par seconde pendant une méditation. */
     public static void secondTick(ServerPlayer player, MeditationData med) {
@@ -79,6 +80,6 @@ public final class MeditationManager {
         progression.setManaAwakened(true);
         mana.setMax(INITIAL_MAX_MANA);
         mana.setCurrent(INITIAL_MAX_MANA);
-        player.sendSystemMessage(Component.literal("Ton mana s'éveille !"));
+        player.sendSystemMessage(Component.literal("Ton " + Chat.mana("mana") + " s'" + Chat.good("éveille") + " !"));
     }
 }

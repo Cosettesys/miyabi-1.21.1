@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 
 public final class SpellSlotsData {
 
-    private final String[] slots = { "fireball", "blunt_test", "slashing_test", "piercing_test", "" };
+    private final String[] slots = { "", "", "", "", "" };
 
     /** Id du sort dans ce slot, ou "" si le slot est vide. */
     public String getSpellId(int slot) {

@@ -6,6 +6,7 @@ import net.cosette.miyabi.registry.ModAttachments;
 import net.cosette.miyabi.skills.magic.MagicSchool;
 import net.cosette.miyabi.skills.magic.SpellDefinition;
 import net.cosette.miyabi.skills.swordtechniques.SwordTechniqueDefinition;
+import net.cosette.miyabi.util.Chat;
 
 /**
  * Progression par l'usage. Aucune valeur chiffrée n'est montrée au joueur : seuls des messages au niveau de la hotbar
@@ -19,10 +20,10 @@ public final class MasteryManager {
         PlayerProgressionData data = player.getData(ModAttachments.PROGRESSION);
         int casts = data.incrementSpellCasts(def.id());
         if (MasteryEffects.masterySteps(casts) > MasteryEffects.masterySteps(casts - 1)) {
-            player.sendSystemMessage(Component.literal("Je me sens plus à l'aise avec " + def.id() + "."));
+            player.sendSystemMessage(Component.literal("Je me sens plus à l'aise avec " + Chat.school(def.school()) + " : " + Chat.good(def.id()) + "."));
         }
         if (casts == SPELL_MASTERY_CASTS) {
-            player.sendSystemMessage(Component.literal("Je maîtrise désormais " + def.id() + "."));
+            player.sendSystemMessage(Component.literal("Je " + Chat.good("maîtrise") + " désormais " + def.id() + "."));
         }
         MagicSchool school = def.school();
         MagicRank current = data.getSchoolRank(school);
@@ -36,7 +37,7 @@ public final class MasteryManager {
             data.setSchoolRank(school, next);
             data.setSchoolMastery(school, points - required);
             player.sendSystemMessage(Component.literal(
-                    "Rang " + school.name() + " : " + current.name() + " -> " + next.name() + " !"));
+                    "Rang " + Chat.school(school) + " : " + Chat.rank(current) + " -> " + Chat.rank(next) + " !"));
         } else {
             data.setSchoolMastery(school, points);
         }
@@ -46,10 +47,10 @@ public final class MasteryManager {
         int uses = data.incrementTechniqueUses(technique.id());
         if (MasteryEffects.masterySteps(uses, TECHNIQUE_MASTERY_USES)
                 > MasteryEffects.masterySteps(uses - 1, TECHNIQUE_MASTERY_USES)) {
-            player.sendSystemMessage(Component.literal("Mes gestes sont plus fluides avec " + technique.id() + "."));
+            player.sendSystemMessage(Component.literal("Mes gestes sont " + Chat.good("plus fluides") + " avec " + Chat.style(technique.style()) + " : " + technique.id() + "."));
         }
         if (uses == TECHNIQUE_MASTERY_USES) {
-            player.sendSystemMessage(Component.literal("Je maîtrise désormais " + technique.id() + "."));
+            player.sendSystemMessage(Component.literal("Je " + Chat.good("maîtrise") + " désormais " + technique.id() + "."));
         }
         var style = technique.style();
         MagicRank current = data.getStyleRank(style);
@@ -69,7 +70,7 @@ public final class MasteryManager {
             data.setStyleRank(style, next);
             data.setStyleMastery(style, points - required);
             player.sendSystemMessage(Component.literal(
-                    "Rang " + style.name() + " : " + current.name() + " -> " + next.name() + " !"));
+                    "Rang " + Chat.style(style) + " : " + Chat.rank(current) + " -> " + Chat.rank(next) + " !"));
         } else {
             data.setStyleMastery(style, points);
         }

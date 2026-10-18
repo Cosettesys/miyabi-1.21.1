@@ -1,5 +1,5 @@
 {
-  "itemGroup.miyabi": "Example Mod Tab",
+  "itemGroup.miyabi": "Miyabi",
   "block.miyabi.example_block": "Example Block",
   "item.miyabi.example_item": "Example Item",
 
@@ -18,5 +18,8 @@
   "key.miyabi.spell5": "Spell 5",
   "key.miyabi.silentcast_toggle": "Toggle Silent Cast",
   "key.miyabi.meditate": "Meditate",
-  "key.miyabi.menu": "Open Menu"
+  "key.miyabi.menu": "Open Menu",
+  "key.miyabi.aura": "Battle Aura",
+  "item.miyabi.aqua_heartia": "Aqua Heartia",
+  "attribute.name.miyabi.casting_speed": "Casting Speed"
 }

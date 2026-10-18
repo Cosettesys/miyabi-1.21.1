@@ -45,10 +45,14 @@ public final class ManaData {
     private static float clampScaling(float value) {
         return Math.max(0f, Math.min(100f, value));
     }
+    /** Total de mana dépensé depuis le chargement (non sauvegardé) : sert à mesurer la dépense pendant un renforcement. */
+    private double totalSpent = 0.0;
+    public double getTotalSpent() { return totalSpent; }
     public boolean spend(float amount) {
         if (amount <= 0f) return true;
         if (current < amount) return false;
         current -= amount;
+        totalSpent += amount;
         ticksUntilNextRegen = REGEN_INTERVAL_TICKS; // repousse le prochain gain, sans dépasser 5s
         return true;
     }

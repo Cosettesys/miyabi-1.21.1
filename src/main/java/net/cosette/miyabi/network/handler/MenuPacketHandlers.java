@@ -22,7 +22,7 @@ import net.cosette.miyabi.progression.SwordStyle;
 import net.cosette.miyabi.skills.swordtechniques.SwordTechniqueDefinition;
 import net.cosette.miyabi.skills.SwordTechniqueRegistry;
 import java.util.Comparator;
-
+import net.cosette.miyabi.util.Chat;
 import java.util.ArrayList;
 import java.util.List;
 import net.cosette.miyabi.network.payload.MenuDataPayload;
@@ -36,7 +36,7 @@ public final class MenuPacketHandlers {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
             if (!player.getData(ModAttachments.PROGRESSION).isManaAwakened()) {
-                player.sendSystemMessage(Component.literal("Ton mana n'est pas éveillé."));
+                player.sendSystemMessage(Component.literal("Ton " + Chat.mana("mana") + " n'est " + Chat.bad("pas éveillé") + "."));
                 return;
             }
             sendSnapshot(player);
@@ -50,6 +50,8 @@ public final class MenuPacketHandlers {
             if (SpellRegistry.byId(payload.spellId()) == null
                     && SwordTechniqueRegistry.byId(payload.spellId()) == null) return;
             if (!player.getData(ModAttachments.PROGRESSION).isManaAwakened()) return;
+            SpellDefinition spell = SpellRegistry.byId(payload.spellId());
+            if (spell != null && !player.getData(ModAttachments.PROGRESSION).isSpellUnlocked(spell.id())) return;
             if (player.getData(ModAttachments.CAST).isCasting()
                     || player.getData(ModAttachments.MEDITATION).isMeditating()) {
                 player.sendSystemMessage(Component.literal(
@@ -84,9 +86,11 @@ public final class MenuPacketHandlers {
         defs.sort(Comparator.comparingInt((SpellDefinition d) -> d.rank().ordinal()).thenComparing(SpellDefinition::id));
         List<MenuDataPayload.SpellEntry> spells = new ArrayList<>();
         for (SpellDefinition def : defs) {
+            if (!progression.isSpellUnlocked(def.id())) continue; // sort pas encore débloqué : invisible
             spells.add(new MenuDataPayload.SpellEntry(
                     def.id(), def.school().name(), def.rank().name(),
-                    progression.getSpellCasts(def.id()), CastManager.effectiveManaCost(player, def)));
+                    progression.getSpellCasts(def.id()), CastManager.effectiveManaCost(player, def),
+                    progression.isSpellLearned(def.id())));
         }
         List<SwordTechniqueDefinition> techs = new ArrayList<>(SwordTechniqueRegistry.all());
         techs.sort(Comparator.comparingInt((SwordTechniqueDefinition t) -> t.rank().ordinal())

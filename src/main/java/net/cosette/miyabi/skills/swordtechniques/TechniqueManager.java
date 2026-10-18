@@ -6,6 +6,8 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
@@ -15,7 +17,6 @@ import net.cosette.miyabi.registry.ModParticles;
 import net.cosette.miyabi.skills.damage.DamageResolver;
 import net.cosette.miyabi.skills.damage.ModDamageTypes;
 
-
 public final class TechniqueManager {
     private TechniqueManager() {}
     /** Largeur du cône de visée : cos(30°). Plus la valeur est proche de 1, plus il faut viser précisément. */
@@ -24,21 +25,23 @@ public final class TechniqueManager {
     private static final double SLASH_DISTANCE = 2.1;
     public static void use(ServerPlayer player, SwordTechniqueDefinition technique) {
         PlayerProgressionData progression = player.getData(ModAttachments.PROGRESSION);
-        // Les techniques du dieu de l'épée demandent une épée en main (détectée par un tag, donc compatible avec les mods).
-        if (technique.style() == SwordStyle.SWORD_GOD && !player.getMainHandItem().is(ModTags.SWORD_GOD_WEAPONS)) {
-            player.displayClientMessage(Component.literal("Il me faut une épée pour cette technique."), true);
+        TechniqueCooldownData cooldown = player.getData(ModAttachments.TECHNIQUE_COOLDOWN);
+        long now = player.level().getGameTime();
+        // La recharge passe avant toutes les autres vérifications.
+        if (!cooldown.isReady(technique.id(), now)) {
+            int seconds = (int) Math.ceil(cooldown.remainingTicks(technique.id(), now) / 20.0);
+            player.displayClientMessage(Component.literal("Technique en recharge (" + seconds + " s)."), true);
+            return;
+        }
+        // Chaque technique peut exiger une arme en main, détectée par un tag d'objets (donc compatible avec les mods).
+        TagKey<Item> requiredWeapon = technique.requiredWeapon();
+        if (requiredWeapon != null && !player.getMainHandItem().is(requiredWeapon)) {
+            player.displayClientMessage(Component.literal("Il me faut une épée en main pour cette technique."), true);
             return;
         }
         // Les techniques de rang Avancé ou plus demandent la battle aura (donc le mana éveillé).
         if (technique.rank().isAtLeast(MagicRank.ADVANCED) && !progression.isBattleAuraAwakened()) {
             player.displayClientMessage(Component.literal("Mon corps n'est pas assez fort pour cette technique."), true);
-            return;
-        }
-        TechniqueCooldownData cooldown = player.getData(ModAttachments.TECHNIQUE_COOLDOWN);
-        long now = player.level().getGameTime();
-        if (!cooldown.isReady(technique.id(), now)) {
-            int seconds = (int) Math.ceil(cooldown.remainingTicks(technique.id(), now) / 20.0);
-            player.displayClientMessage(Component.literal("Technique en recharge (" + seconds + " s)."), true);
             return;
         }
         LivingEntity target = findTarget(player, technique.reach());

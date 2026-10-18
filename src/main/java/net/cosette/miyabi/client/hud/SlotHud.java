@@ -19,7 +19,6 @@ public final class SlotHud {
     private SlotHud() {}
     private static final ResourceLocation LAYER_ID = ResourceLocation.fromNamespaceAndPath(Miyabi.MODID, "slot_list");
     private static final int LINE_HEIGHT = 10;
-    private static final int GAP_ABOVE_BAR = 4;
     private static final int COLOR_SPELL = 0xFF77AAFF;      // bleu : coût en mana
     private static final int COLOR_TECHNIQUE = 0xFFFFDD55;  // jaune : recharge
     private static final int COLOR_EMPTY = 0xFF888888;
@@ -38,8 +37,7 @@ public final class SlotHud {
         List<SlotHudPayload.Entry> slots = ClientSlotHudState.getSlots();
         if (slots.stream().allMatch(e -> e.kind() == SlotHudPayload.KIND_EMPTY)) return;
         int x = ManaHud.MARGIN_LEFT;
-        int barTop = mc.getWindow().getGuiScaledHeight() - ManaHud.MARGIN_BOTTOM;
-        int top = barTop - GAP_ABOVE_BAR - slots.size() * LINE_HEIGHT;
+        int top = ManaHud.SLOT_LIST_TOP;
         for (int i = 0; i < slots.size(); i++) {
             SlotHudPayload.Entry entry = slots.get(i);
             String text;

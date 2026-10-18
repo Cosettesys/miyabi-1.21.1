@@ -10,6 +10,7 @@ import net.cosette.miyabi.skills.cast.SilentCastData;
 import net.cosette.miyabi.skills.cast.SpellSlots;
 import net.cosette.miyabi.network.payload.CastInputPayload;
 import net.cosette.miyabi.network.payload.SilentCastTogglePayload;
+import net.cosette.miyabi.util.Chat;
 
 public final class CastPacketHandlers {
     private CastPacketHandlers() {}
@@ -31,16 +32,16 @@ public final class CastPacketHandlers {
             if (!(context.player() instanceof ServerPlayer player)) return;
             CastData cast = player.getData(ModAttachments.CAST);
             if (cast.isCasting()) {
-                player.sendSystemMessage(Component.literal("Impossible de changer le silent cast pendant une incantation."));
+                player.sendSystemMessage(Component.literal(Chat.bad("Impossible") + " de changer le silent cast pendant une incantation."));
                 return;
             }
             SilentCastData data = player.getData(ModAttachments.SILENT_CAST);
             if (!data.isUnlocked()) {
-                player.sendSystemMessage(Component.literal("Silent cast non débloqué."));
+                player.sendSystemMessage(Component.literal("Silent cast " + Chat.bad("non débloqué") + "."));
                 return;
             }
             data.setEnabled(!data.isEnabled());
-            player.sendSystemMessage(Component.literal("Silent cast : " + (data.isEnabled() ? "activé" : "désactivé")));
+            player.sendSystemMessage(Component.literal("Silent cast : " + (data.isEnabled() ? Chat.good("activé") : Chat.dim("désactivé"))));
         });
     }
 }

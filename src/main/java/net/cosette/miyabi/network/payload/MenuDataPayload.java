@@ -16,7 +16,7 @@ public record MenuDataPayload(
 ) implements CustomPacketPayload {
     public record SchoolEntry(String school, String rank, int mastery, int required) {}
     public record StyleEntry(String style, String rank) {}
-    public record SpellEntry(String id, String school, String rank, int casts, float manaCost) {}
+    public record SpellEntry(String id, String school, String rank, int casts, float manaCost, boolean learned) {}
     public record TechniqueEntry(String id, String style, String rank) {}
     public static final Type<MenuDataPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Miyabi.MODID, "menu_data"));
@@ -47,6 +47,7 @@ public record MenuDataPayload(
             buf.writeUtf(e.rank());
             buf.writeVarInt(e.casts());
             buf.writeFloat(e.manaCost());
+            buf.writeBoolean(e.learned());
         }
         buf.writeVarInt(p.techniques().size());
         for (TechniqueEntry e : p.techniques()) {
@@ -82,7 +83,7 @@ public record MenuDataPayload(
         int spellCount = buf.readVarInt();
         List<SpellEntry> spells = new ArrayList<>();
         for (int i = 0; i < spellCount; i++) {
-            spells.add(new SpellEntry(buf.readUtf(), buf.readUtf(), buf.readUtf(), buf.readVarInt(), buf.readFloat()));
+            spells.add(new SpellEntry(buf.readUtf(), buf.readUtf(), buf.readUtf(), buf.readVarInt(), buf.readFloat(), buf.readBoolean()));
         }
         int techniqueCount = buf.readVarInt();
         List<TechniqueEntry> techniques = new ArrayList<>();

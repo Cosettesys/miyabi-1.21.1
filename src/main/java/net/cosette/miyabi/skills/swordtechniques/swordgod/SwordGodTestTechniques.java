@@ -2,6 +2,7 @@ package net.cosette.miyabi.skills.swordtechniques.swordgod;
 
 import net.cosette.miyabi.progression.MagicRank;
 import net.cosette.miyabi.progression.SwordStyle;
+import net.cosette.miyabi.registry.ModTags;
 import net.cosette.miyabi.skills.swordtechniques.SwordTechniqueDefinition;
 
 import java.util.ArrayList;
@@ -15,7 +16,8 @@ public final class SwordGodTestTechniques {
         List<SwordTechniqueDefinition> list = new ArrayList<>();
         MagicRank[] ranks = MagicRank.values();
         for (int i = 1; i <= 12; i++) {
-            list.add(new SwordTechniqueDefinition("sword_god_test_" + i, SwordStyle.SWORD_GOD, ranks[(i - 1) % ranks.length]));
+            list.add(new SwordTechniqueDefinition("sword_god_test_" + i, SwordStyle.SWORD_GOD, ranks[(i - 1) % ranks.length],
+                    ModTags.SWORD_GOD_WEAPONS));
         }
         return list;
     }

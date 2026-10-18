@@ -9,7 +9,7 @@ public record HealEffect(float baseHeal) implements SpellEffect {
     @Override
     public void apply(Entity target, SpellDefinition definition, SpellCastContext context) {
         if (target instanceof LivingEntity living) {
-            living.heal(baseHeal);
+            living.heal(baseHeal * context.effectScale());
         }
     }
 }
