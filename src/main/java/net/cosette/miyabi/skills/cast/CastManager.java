@@ -1,5 +1,6 @@
 package net.cosette.miyabi.skills.cast;
 
+import net.cosette.miyabi.config.ConfigValue;
 import net.cosette.miyabi.progression.*;
 import net.cosette.miyabi.registry.ModAttachments;
 import net.cosette.miyabi.registry.ModAttributes;
@@ -27,12 +28,17 @@ public final class CastManager {
     private CastManager() {}
     private static final ResourceLocation SILENT_SLOW_MODIFIER_ID =
             ResourceLocation.fromNamespaceAndPath(Miyabi.MODID, "silent_cast_slow");
-    public static final float SILENT_CAST_SLOW_PERCENT = 25f;
-    public static final float DAMAGE_INTERRUPT_LOSS_PERCENT = 25f;
+    @ConfigValue(value = "cast.silent_cast_slow_percent", comment = "Ralentissement de déplacement pendant un silent cast, en pourcentage.", min = 0, max = 100)
+    public static float SILENT_CAST_SLOW_PERCENT = 25f;
+    @ConfigValue(value = "cast.damage_interrupt_loss_percent", comment = "Part de la charge perdue quand un joueur en incantation est blessé, en pourcentage.", min = 0, max = 100)
+    public static float DAMAGE_INTERRUPT_LOSS_PERCENT = 25f;
     public static final int KEEPALIVE_TIMEOUT_TICKS = 15;
-    public static final float SILENT_CAST_SPEED_BONUS_PERCENT = 40f;
-    /** Mana max gagné par point de mana dépensé en lançant un sort (valeur provisoire). */
-    public static final float MANA_MAX_GAIN_PER_MANA_SPENT = 0.02f;
+    @ConfigValue(value = "cast.silent_cast_speed_bonus_percent", comment = "Gain de vitesse d'incantation d'un silent cast, en pourcentage de temps en moins.", min = 0, max = 95)
+    public static float SILENT_CAST_SPEED_BONUS_PERCENT = 40f;
+    @ConfigValue(value = "cast.mana_max_gain_per_mana_spent", comment = "Mana maximum gagné par point de mana dépensé en lançant des sorts.", min = 0)
+    public static float MANA_MAX_GAIN_PER_MANA_SPENT = 0.02f;
+    @ConfigValue(value = "cast.silent_cast_damage_multiplier", comment = "Multiplicateur des dégâts d'un sort lancé en silent cast.", min = 0)
+    public static float SILENT_CAST_DAMAGE_MULTIPLIER = 0.5f;
     /** Coût de base du sort, réduit par la maîtrise du joueur sur ce sort. */
     public static float effectiveManaCost(ServerPlayer player, SpellDefinition def) {
         int casts = player.getData(ModAttachments.PROGRESSION).getSpellCasts(def.id());
@@ -56,6 +62,13 @@ public final class CastManager {
         // Vitesse d'incantation (bâtons, effets...) : 2 = deux fois plus vite, donc temps divisé par deux.
         base /= (float) Math.max(0.1, player.getAttributeValue(ModAttributes.CASTING_SPEED));
         return Math.max(1, Math.round(base));
+    }
+    /** Temps d'incantation en secondes de ce sort pour ce joueur (maîtrise et bâton compris), pour l'affichage dans le menu. */
+    public static float castSeconds(ServerPlayer player, SpellDefinition def) {
+        int casts = player.getData(ModAttachments.PROGRESSION).getSpellCasts(def.id());
+        float base = def.baseCastDurationTicks() * MasteryEffects.castTimeMultiplier(casts);
+        base /= (float) Math.max(0.1, player.getAttributeValue(ModAttributes.CASTING_SPEED));
+        return base / 20f;
     }
     public static void startCast(ServerPlayer player, CastData cast, int slot) {
         if (cast.isCasting()) return;
@@ -81,7 +94,11 @@ public final class CastManager {
             player.sendSystemMessage(Component.literal("Je " + Chat.bad("ne connais pas") + " ce sort."));
             return;
         }
-
+        // On ne peut ni lancer ni apprendre un sort d'un rang supérieur au sien dans l'école.
+        if (!progression.getSchoolRank(def.school()).isAtLeast(def.rank())) {
+            player.sendSystemMessage(Component.literal("Ce sort " + Chat.bad("dépasse mon niveau") + " dans cette école."));
+            return;
+        }
         ManaData mana = player.getData(ModAttachments.MANA);
         if (mana.getCurrent() < effectiveManaCost(player, def)) {
             player.sendSystemMessage(Component.literal("Pas assez de " + Chat.mana("mana") + " pour ce sort."));
@@ -142,7 +159,8 @@ public final class CastManager {
             // Chaque tentative fait monter la jauge d'apprentissage, qu'elle réussisse ou non.
             float gaugeBefore = progression.getSpellLearning(def.id());
             float gaugeAfter = Math.min(SpellLearning.LEARNED,
-                    gaugeBefore + SpellLearning.gaugeGain(progression.getSchoolRank(def.school()), def.rank()));
+                    gaugeBefore + SpellLearning.gaugeGain(progression.getSchoolRank(def.school()), def.rank(),
+                            progression.isSpellSeenOnly(def.id())));
             progression.setSpellLearning(def.id(), gaugeAfter);
             if (gaugeAfter >= SpellLearning.LEARNED) {
                 player.sendSystemMessage(Component.literal("J'ai " + Chat.good("appris") + " "

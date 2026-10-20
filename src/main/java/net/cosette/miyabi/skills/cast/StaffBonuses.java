@@ -1,5 +1,6 @@
 package net.cosette.miyabi.skills.cast;
 
+import net.cosette.miyabi.config.ConfigValue;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.cosette.miyabi.item.StaffItem;
@@ -8,8 +9,8 @@ import net.cosette.miyabi.skills.magic.MagicSchool;
 /** Bonus des bâtons tenus en main principale ou secondaire. */
 public final class StaffBonuses {
     private StaffBonuses() {}
-    /** Une réduction ne peut pas faire tomber le coût à zéro. */
-    private static final float MAX_COST_REDUCTION = 0.95f;
+    @ConfigValue(value = "staffs.max_cost_reduction", comment = "Réduction de coût maximale qu'un bâton peut donner (0,95 = le coût ne peut pas descendre sous 5 %).", min = 0, max = 0.99)
+    public static float MAX_COST_REDUCTION = 0.95f;
     /** Meilleure réduction de coût (0 à 1) parmi les bâtons tenus, pour cette école. Elles ne s'additionnent pas. */
     public static float costReduction(ServerPlayer player, MagicSchool school) {
         float best = 0f;

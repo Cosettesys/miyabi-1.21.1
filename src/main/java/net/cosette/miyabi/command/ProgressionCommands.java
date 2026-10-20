@@ -76,7 +76,13 @@ public final class ProgressionCommands {
                                                 .executes(ProgressionCommands::setSpellLearning)))))
                 .then(Commands.literal("learnall")
                         .then(Commands.argument("player", EntityArgument.player())
-                                .executes(ProgressionCommands::learnAll)));
+                                .executes(ProgressionCommands::learnAll)))
+                .then(Commands.literal("spellseen")
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .then(Commands.argument("spell", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(SpellRegistry.ids(), builder))
+                                        .then(Commands.argument("seen", BoolArgumentType.bool())
+                                                .executes(ProgressionCommands::setSpellSeen)))));
     }
     private static PlayerProgressionData data(ServerPlayer player) {
         return player.getData(ModAttachments.PROGRESSION);
@@ -123,6 +129,9 @@ public final class ProgressionCommands {
             if (learning.length() > 0) learning.append(", ");
             learning.append(Chat.dim(entry.getKey())).append("=")
                     .append(entry.getValue() >= 100f ? Chat.good("appris") : Chat.mana(String.format("%.0f%%", entry.getValue())));
+            if (entry.getValue() < 100f && data.isSpellSeenOnly(entry.getKey())) {
+                learning.append(Chat.dim(" (vu)"));
+            }
         }
         return CommandUtil.info(ctx, Chat.title("Progression de " + player.getName().getString())
                 + "\n" + Chat.label("Mana éveillé") + " : " + Chat.bool(data.isManaAwakened())
@@ -247,5 +256,15 @@ public final class ProgressionCommands {
             data(player).setSpellLearning(id, 100f);
         }
         return CommandUtil.success(ctx, "Tous les sorts sont appris pour " + player.getName().getString());
+    }
+    private static int setSpellSeen(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = CommandUtil.player(ctx);
+        String spellId = StringArgumentType.getString(ctx, "spell");
+        boolean seen = BoolArgumentType.getBool(ctx, "seen");
+        if (SpellRegistry.byId(spellId) == null) {
+            return CommandUtil.fail(ctx, "Sort inconnu : " + spellId);
+        }
+        data(player).setSpellSeenOnly(spellId, seen);
+        return CommandUtil.success(ctx, spellId + " de " + player.getName().getString() + " : " + (seen ? "appris en le voyant" : "appris en lisant"));
     }
 }

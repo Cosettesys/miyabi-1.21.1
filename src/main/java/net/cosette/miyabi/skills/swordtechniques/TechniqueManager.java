@@ -1,5 +1,6 @@
 package net.cosette.miyabi.skills.swordtechniques;
 
+import net.cosette.miyabi.config.ConfigValue;
 import net.cosette.miyabi.progression.*;
 import net.cosette.miyabi.registry.ModTags;
 import net.minecraft.core.registries.Registries;
@@ -19,10 +20,10 @@ import net.cosette.miyabi.skills.damage.ModDamageTypes;
 
 public final class TechniqueManager {
     private TechniqueManager() {}
-    /** Largeur du cône de visée : cos(30°). Plus la valeur est proche de 1, plus il faut viser précisément. */
-    private static final double MIN_ALIGNMENT = 0.866;
-    /** Distance entre les yeux du joueur et la trace du coup. */
-    private static final double SLASH_DISTANCE = 2.1;
+    @ConfigValue(value = "sword_techniques.aim_min_alignment", comment = "Précision de visée exigée : cos de l'angle du cône (0,866 = 30 degrés ; plus proche de 1 = plus précis).", min = 0, max = 0.999)
+    public static double MIN_ALIGNMENT = 0.866;
+    @ConfigValue(value = "sword_techniques.slash_distance", comment = "Distance entre les yeux du joueur et la trace visuelle du coup, en blocs.", min = 0, max = 8)
+    public static double SLASH_DISTANCE = 1.6;
     public static void use(ServerPlayer player, SwordTechniqueDefinition technique) {
         PlayerProgressionData progression = player.getData(ModAttachments.PROGRESSION);
         TechniqueCooldownData cooldown = player.getData(ModAttachments.TECHNIQUE_COOLDOWN);

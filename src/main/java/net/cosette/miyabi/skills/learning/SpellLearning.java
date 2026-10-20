@@ -5,6 +5,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.phys.Vec3;
+import net.cosette.miyabi.config.ConfigValue;
 import net.cosette.miyabi.progression.MagicRank;
 import net.cosette.miyabi.progression.PlayerProgressionData;
 import net.cosette.miyabi.registry.ModAttachments;
@@ -16,45 +17,57 @@ import java.util.List;
 
 /**
  * Apprentissage des sorts. Un sort débloqué mais pas appris (jauge sous 100) peut échouer ; réussi, il peut aussi
- * recevoir des malus indépendants. Toutes les valeurs sont provisoires, regroupées ici pour passer en configuration.
+ * recevoir des malus. Toutes les valeurs sont réglables dans miyabi.toml (section "learning").
  */
 public final class SpellLearning {
     private SpellLearning() {}
     public static final float LEARNED = 100f;
-    // --- Chance de réussite : environ 5 % au début, 70 % à 99 % d'apprentissage, 100 % une fois appris ---
-    private static final float MIN_CHANCE = 0.05f;
-    private static final float MAX_CHANCE_BEFORE_LEARNED = 0.70f;
     private static final float LAST_GAUGE_BEFORE_LEARNED = 99f;
-    /** Plus grand que 1 : la chance monte lentement au début puis de plus en plus vite. */
-    private static final double CURVE_EXPONENT = 1.6;
+    // --- Chance de réussite : environ 5 % au début, 70 % à 99 % d'apprentissage, 100 % une fois appris ---
+    @ConfigValue(value = "learning.min_chance", comment = "Chance de réussite d'un sort dont la jauge d'apprentissage est à 0 (0 à 1).", min = 0, max = 1)
+    public static float MIN_CHANCE = 0.05f;
+    @ConfigValue(value = "learning.max_chance_before_learned", comment = "Chance de réussite juste avant d'avoir appris le sort, à 99 % de jauge (0 à 1).", min = 0, max = 1)
+    public static float MAX_CHANCE_BEFORE_LEARNED = 0.70f;
+    @ConfigValue(value = "learning.curve_exponent", comment = "Forme de la courbe : 1 = linéaire, plus grand = la chance monte lentement puis de plus en plus vite.", min = 0.1, max = 10)
+    public static double CURVE_EXPONENT = 1.6;
     // --- Gain de jauge par tentative (réussie ou non) ---
-    private static final float BASE_GAIN = 2.0f;
-    /** Bonus par rang d'écart quand le sort est de rang inférieur au joueur dans l'école. */
-    private static final float GAIN_BONUS_PER_RANK_BELOW_PLAYER = 0.5f;
-    /** Facteur par rang d'écart quand le sort est de rang supérieur au joueur. */
-    private static final float GAIN_FACTOR_PER_RANK_ABOVE_PLAYER = 0.5f;
-    // --- Malus d'un sort réussi mais pas appris à 100 % : indépendants les uns des autres ---
-    private static final float DEBUFF_CHANCE = 0.5f;
-    private static final float SELF_DAMAGE_CHANCE = 0.15f;
-    /** Part des dégâts du sort infligée au lanceur en cas de retour de flamme. */
-    public static final float SELF_DAMAGE_FRACTION = 0.5f;
-    /** Distance à laquelle on voit un sort lancé et peut le débloquer. */
-    private static final double WITNESS_RADIUS = 16.0;
+    @ConfigValue(value = "learning.base_gain", comment = "Jauge gagnée par tentative (sur 100) quand le sort est du même rang que le joueur dans l'école.", min = 0)
+    public static float BASE_GAIN = 2.0f;
+    @ConfigValue(value = "learning.gain_bonus_per_rank_below_player", comment = "Bonus de gain par rang d'écart quand le sort est d'un rang inférieur à celui du joueur (0,5 = +50 % par rang).", min = 0)
+    public static float GAIN_BONUS_PER_RANK_BELOW_PLAYER = 0.5f;
+    @ConfigValue(value = "learning.gain_factor_per_rank_above_player", comment = "Facteur de gain par rang d'écart quand le sort est d'un rang supérieur (0,5 = moitié moins par rang).", min = 0, max = 1)
+    public static float GAIN_FACTOR_PER_RANK_ABOVE_PLAYER = 0.5f;
+    @ConfigValue(value = "learning.seen_only_gain_divisor", comment = "Un sort appris en le voyant lancer, sans la formule exacte, progresse ce nombre de fois plus lentement.", min = 1)
+    public static float SEEN_ONLY_GAIN_DIVISOR = 3.0f;
+    // --- Malus d'un sort réussi mais pas appris à 100 % ---
+    @ConfigValue(value = "learning.debuff_chance", comment = "Chance de chacun des malus mana doublé, effet divisé par 2 et trajectoire déviée (indépendants, 0 à 1).", min = 0, max = 1)
+    public static float DEBUFF_CHANCE = 0.5f;
+    @ConfigValue(value = "learning.self_damage_chance", comment = "Chance d'un retour de flamme (sorts de dégâts seulement). Quand il se produit, les autres malus ne se produisent pas.", min = 0, max = 1)
+    public static float SELF_DAMAGE_CHANCE = 0.20f;
+    @ConfigValue(value = "learning.self_damage_fraction", comment = "Part des dégâts du sort infligée au lanceur en cas de retour de flamme.", min = 0)
+    public static float SELF_DAMAGE_FRACTION = 0.5f;
+    @ConfigValue(value = "learning.witness_radius", comment = "Distance en blocs à laquelle un sort lancé peut être vu, et donc débloqué.", min = 1)
+    public static double WITNESS_RADIUS = 16.0;
     public static float successChance(float gauge) {
         if (gauge >= LEARNED) return 1f;
         float t = Math.min(gauge, LAST_GAUGE_BEFORE_LEARNED) / LAST_GAUGE_BEFORE_LEARNED;
         return MIN_CHANCE + (MAX_CHANCE_BEFORE_LEARNED - MIN_CHANCE) * (float) Math.pow(t, CURVE_EXPONENT);
     }
-    /** Apprendre un sort bien inférieur à son rang va plus vite ; viser un sort supérieur à son rang est bien plus lent. */
-    public static float gaugeGain(MagicRank playerRank, MagicRank spellRank) {
+
+    /**
+     * Apprendre un sort bien inférieur à son rang va plus vite ; viser un sort supérieur à son rang est bien plus lent.
+     * Apprendre en voyant le sort (sans sa formule) est plus lent que d'apprendre en le lisant.
+     */
+    public static float gaugeGain(MagicRank playerRank, MagicRank spellRank, boolean seenOnly) {
         int gap = playerRank.ordinal() - spellRank.ordinal();
-        if (gap >= 0) {
-            return BASE_GAIN * (1f + GAIN_BONUS_PER_RANK_BELOW_PLAYER * gap);
-        }
-        return BASE_GAIN * (float) Math.pow(GAIN_FACTOR_PER_RANK_ABOVE_PLAYER, -gap);
+        float gain = gap >= 0
+                ? BASE_GAIN * (1f + GAIN_BONUS_PER_RANK_BELOW_PLAYER * gap)
+                : BASE_GAIN * (float) Math.pow(GAIN_FACTOR_PER_RANK_ABOVE_PLAYER, -gap);
+        return seenOnly ? gain / SEEN_ONLY_GAIN_DIVISOR : gain;
     }
     public record Debuffs(boolean doubledMana, boolean halvedEffect, boolean deviated, boolean selfDamage) {
         public static final Debuffs NONE = new Debuffs(false, false, false, false);
+
         public boolean any() {
             return doubledMana || halvedEffect || deviated || selfDamage;
         }
@@ -68,11 +81,15 @@ public final class SpellLearning {
         }
     }
     public static Debuffs rollDebuffs(RandomSource random, boolean damagingSpell) {
+        // Un retour de flamme exclut tous les autres malus.
+        if (damagingSpell && random.nextFloat() < SELF_DAMAGE_CHANCE) {
+            return new Debuffs(false, false, false, true);
+        }
         return new Debuffs(
                 random.nextFloat() < DEBUFF_CHANCE,
                 random.nextFloat() < DEBUFF_CHANCE,
                 random.nextFloat() < DEBUFF_CHANCE,
-                damagingSpell && random.nextFloat() < SELF_DAMAGE_CHANCE);
+                false);
     }
     /** Écarte la direction du sort de façon bien visible. */
     public static Vec3 deviate(Vec3 direction, RandomSource random) {
@@ -83,18 +100,23 @@ public final class SpellLearning {
     }
     /**
      * Un sort vu de près peut être débloqué (donc devenir "à apprendre") par les joueurs à portée dont le rang dans
-     * l'école est au moins celui du sort. Le mana doit être éveillé.
+     * l'école est au moins celui du sort. Le mana doit être éveillé. Un sort appris ainsi est marqué "vu" : sans la
+     * formule exacte, il progresse plus lentement.
      */
     public static void unlockForWitnesses(ServerPlayer caster, SpellDefinition def) {
         for (ServerPlayer witness : ((ServerLevel) caster.level()).players()) {
             if (witness == caster) continue;
             if (witness.distanceToSqr(caster) > WITNESS_RADIUS * WITNESS_RADIUS || !witness.hasLineOfSight(caster)) continue;
+
             PlayerProgressionData data = witness.getData(ModAttachments.PROGRESSION);
             if (!data.isManaAwakened() || data.isSpellUnlocked(def.id())) continue;
             if (!data.getSchoolRank(def.school()).isAtLeast(def.rank())) continue;
+
             data.unlockSpell(def.id());
+            data.setSpellSeenOnly(def.id(), true);
             witness.sendSystemMessage(Component.literal("J'ai vu " + Chat.school(def.school()) + " : "
-                    + Chat.good(def.id()) + ". Je pourrais " + Chat.good("apprendre") + " ce sort."));
+                    + Chat.good(def.id()) + ". Je pourrais " + Chat.good("apprendre") + " ce sort, mais sans sa formule ce sera "
+                    + Chat.dim("long") + "."));
         }
     }
 }

@@ -1,5 +1,6 @@
 package net.cosette.miyabi.progression;
 
+import net.cosette.miyabi.config.ConfigValue;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.cosette.miyabi.registry.ModAttachments;
@@ -13,9 +14,12 @@ import net.cosette.miyabi.util.Chat;
  */
 public final class MasteryManager {
     private MasteryManager() {}
-    public static final int MASTERY_PER_CAST = 1;
-    public static final int SPELL_MASTERY_CASTS = 200;
-    public static final int TECHNIQUE_MASTERY_USES = 200;
+    @ConfigValue(value = "mastery.rank_points_per_cast", comment = "Points de maîtrise de rang gagnés par sort ou technique lancé au rang actuel.", min = 0)
+    public static int MASTERY_PER_CAST = 1;
+    @ConfigValue(value = "mastery.spell_casts_to_master", comment = "Nombre de lancers pour maîtriser un sort (coût et temps d'incantation au minimum).", min = 1)
+    public static int SPELL_MASTERY_CASTS = 200;
+    @ConfigValue(value = "mastery.technique_uses_to_master", comment = "Nombre d'utilisations pour maîtriser une technique (recharge au minimum).", min = 1)
+    public static int TECHNIQUE_MASTERY_USES = 200;
     public static void onSpellCast(ServerPlayer player, SpellDefinition def) {
         PlayerProgressionData data = player.getData(ModAttachments.PROGRESSION);
         int casts = data.incrementSpellCasts(def.id());

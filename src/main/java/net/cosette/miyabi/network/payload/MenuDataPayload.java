@@ -16,8 +16,10 @@ public record MenuDataPayload(
 ) implements CustomPacketPayload {
     public record SchoolEntry(String school, String rank, int mastery, int required) {}
     public record StyleEntry(String style, String rank) {}
-    public record SpellEntry(String id, String school, String rank, int casts, float manaCost, boolean learned) {}
-    public record TechniqueEntry(String id, String style, String rank) {}
+    public record SpellEntry(String id, String school, String rank, int casts, float manaCost, boolean learned,
+                             float damage, float heal, float castSeconds, float maxIntensity, String physical) {}
+    public record TechniqueEntry(String id, String style, String rank,
+                                 float damage, float cooldownSeconds, float reach, String physical, String weapon) {}
     public static final Type<MenuDataPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Miyabi.MODID, "menu_data"));
     public static final StreamCodec<FriendlyByteBuf, MenuDataPayload> STREAM_CODEC =
@@ -48,12 +50,22 @@ public record MenuDataPayload(
             buf.writeVarInt(e.casts());
             buf.writeFloat(e.manaCost());
             buf.writeBoolean(e.learned());
+            buf.writeFloat(e.damage());
+            buf.writeFloat(e.heal());
+            buf.writeFloat(e.castSeconds());
+            buf.writeFloat(e.maxIntensity());
+            buf.writeUtf(e.physical());
         }
         buf.writeVarInt(p.techniques().size());
         for (TechniqueEntry e : p.techniques()) {
             buf.writeUtf(e.id());
             buf.writeUtf(e.style());
             buf.writeUtf(e.rank());
+            buf.writeFloat(e.damage());
+            buf.writeFloat(e.cooldownSeconds());
+            buf.writeFloat(e.reach());
+            buf.writeUtf(e.physical());
+            buf.writeUtf(e.weapon());
         }
         buf.writeVarInt(p.slots().size());
         for (String id : p.slots()) {
@@ -83,12 +95,14 @@ public record MenuDataPayload(
         int spellCount = buf.readVarInt();
         List<SpellEntry> spells = new ArrayList<>();
         for (int i = 0; i < spellCount; i++) {
-            spells.add(new SpellEntry(buf.readUtf(), buf.readUtf(), buf.readUtf(), buf.readVarInt(), buf.readFloat(), buf.readBoolean()));
+            spells.add(new SpellEntry(buf.readUtf(), buf.readUtf(), buf.readUtf(), buf.readVarInt(), buf.readFloat(), buf.readBoolean(),
+                    buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readUtf()));
         }
         int techniqueCount = buf.readVarInt();
         List<TechniqueEntry> techniques = new ArrayList<>();
         for (int i = 0; i < techniqueCount; i++) {
-            techniques.add(new TechniqueEntry(buf.readUtf(), buf.readUtf(), buf.readUtf()));
+            techniques.add(new TechniqueEntry(buf.readUtf(), buf.readUtf(), buf.readUtf(),
+                    buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readUtf(), buf.readUtf()));
         }
         int slotCount = buf.readVarInt();
         List<String> slots = new ArrayList<>();

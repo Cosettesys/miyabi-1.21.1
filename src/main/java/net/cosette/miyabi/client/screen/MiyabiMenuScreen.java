@@ -67,7 +67,10 @@ public class MiyabiMenuScreen extends Screen {
     private int listBottom() { return slotY - 26; }
     private int visibleRows() { return Math.max(1, (listBottom() - listTop()) / LINE_H); }
     private int maxScroll(int total) { return Math.max(0, total - visibleRows()); }
-    private int trackX() { return left + PANEL_W - 10; }
+    /** Bord droit de la liste : elle occupe la moitié gauche du menu, le détail de l'élément choisi la moitié droite. */
+    private int listRight() { return left + PANEL_W / 2 - 6; }
+    private int detailX() { return left + PANEL_W / 2 + 6; }
+    private int trackX() { return listRight() - 8; }
     private int currentTotal() {
         int n = 0;
         if (view == View.MAGIC_LIST && selectedSchool != null) {
@@ -281,9 +284,10 @@ public class MiyabiMenuScreen extends Screen {
         List<ListEntry> entries = new ArrayList<>();
         for (MenuDataPayload.SpellEntry s : data.spells()) {
             if (!s.school().equals(selectedSchool.name())) continue;
-            entries.add(new ListEntry(s.id(), s.id() + " [" + s.rank() + "] - " + String.format("%.1f", s.manaCost()) + " mana", !s.learned()));
+            entries.add(new ListEntry(s.id(), s.id() + " [" + s.rank() + "]", !s.learned()));
         }
         renderEntries(g, x, entries, "Aucun sort pour cette école pour l'instant.");
+        renderSpellDetails(g);
         renderAssignFooter(g, x, "sort");
     }
     private void renderSwordList(GuiGraphics g, int x) {
@@ -298,12 +302,13 @@ public class MiyabiMenuScreen extends Screen {
             entries.add(new ListEntry(t.id(), t.id() + " [" + t.rank() + "]", false));
         }
         renderEntries(g, x, entries, "Aucune technique pour ce style pour l'instant.");
+        renderTechniqueDetails(g);
         renderAssignFooter(g, x, "technique");
     }
     private void renderEntries(GuiGraphics g, int x, List<ListEntry> entries, String emptyMessage) {
         scroll = Mth.clamp(scroll, 0, maxScroll(entries.size()));
         int rows = visibleRows();
-        int rowRight = left + PANEL_W - 14;
+        int rowRight = listRight() - 12;
         if (entries.isEmpty()) {
             line(g, emptyMessage, x, listTop(), GREY);
         }
@@ -317,8 +322,7 @@ public class MiyabiMenuScreen extends Screen {
                 g.fill(x - 2, rowY - 1, rowRight, rowY + LINE_H - 1, 0x66FFFFFF);
             }
             entryRows.add(new EntryRow(e.id(), x - 2, rowY - 1, rowRight, rowY + LINE_H - 1));
-
-            line(g, e.text() + slotLabel, x + 4, rowY, selected ? YELLOW : (e.dim() ? DIM : WHITE));
+            line(g, this.font.plainSubstrByWidth(e.text() + slotLabel, rowRight - x - 6), x + 4, rowY, selected ? YELLOW : (e.dim() ? DIM : WHITE));
         }
         drawScrollbar(g, entries.size());
     }
@@ -437,5 +441,48 @@ public class MiyabiMenuScreen extends Screen {
             }
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+    private static String num(float value) {
+        return String.format("%.1f", value);
+    }
+    /** Moitié droite du menu : détails du sort sélectionné. */
+    private void renderSpellDetails(GuiGraphics g) {
+        if (selectedEntry == null) return;
+        for (MenuDataPayload.SpellEntry s : data.spells()) {
+            if (!s.id().equals(selectedEntry)) continue;
+            int x = detailX();
+            int y = listTop();
+            y = line(g, s.id(), x, y, YELLOW);
+            y = line(g, "École : " + s.school() + "  |  Rang : " + s.rank(), x, y, WHITE);
+            y = line(g, s.learned() ? "Sort appris" : "Sort à apprendre", x, y, s.learned() ? 0xFF55FF55 : DIM);
+            y += 4;
+            y = line(g, "Coût en mana : " + num(s.manaCost()), x, y, WHITE);
+            if (s.damage() > 0f) {
+                y = line(g, "Dégâts : " + num(s.damage()) + " (" + s.physical() + ")", x, y, WHITE);
+            }
+            if (s.heal() > 0f) {
+                y = line(g, "Soin : " + num(s.heal()), x, y, WHITE);
+            }
+            y = line(g, "Incantation : " + num(s.castSeconds()) + " s", x, y, WHITE);
+            line(g, "Intensité max : " + Math.round(s.maxIntensity()) + " %", x, y, WHITE);
+            return;
+        }
+    }
+    /** Moitié droite du menu : détails de la technique sélectionnée. */
+    private void renderTechniqueDetails(GuiGraphics g) {
+        if (selectedEntry == null) return;
+        for (MenuDataPayload.TechniqueEntry t : data.techniques()) {
+            if (!t.id().equals(selectedEntry)) continue;
+            int x = detailX();
+            int y = listTop();
+            y = line(g, t.id(), x, y, YELLOW);
+            y = line(g, "Style : " + t.style() + "  |  Rang : " + t.rank(), x, y, WHITE);
+            y += 4;
+            y = line(g, "Dégâts : " + num(t.damage()) + " (" + t.physical() + ")", x, y, WHITE);
+            y = line(g, "Recharge : " + num(t.cooldownSeconds()) + " s", x, y, WHITE);
+            y = line(g, "Portée : " + num(t.reach()) + " blocs", x, y, WHITE);
+            line(g, "Arme requise : " + (t.weapon().isEmpty() ? "aucune" : t.weapon()), x, y, WHITE);
+            return;
+        }
     }
 }

@@ -1,5 +1,6 @@
 package net.cosette.miyabi.progression;
 
+import net.cosette.miyabi.config.ConfigValue;
 import net.cosette.miyabi.registry.ModAttachments;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -10,16 +11,22 @@ import net.cosette.miyabi.util.Chat;
 public final class MeditationManager {
     private MeditationManager() {}
     /** Chance par seconde de progresser. */
-    public static final float SUCCESS_CHANCE = 0.10f;
+    @ConfigValue(value = "meditation.success_chance", comment = "Chance par seconde de progresser dans l'éveil du mana en méditant (0 à 1).", min = 0, max = 1)
+    public static float SUCCESS_CHANCE = 0.10f;
     // Avant l'éveil
-    public static final float AWAKENING_THRESHOLD = 100f;
-    public static final float AWAKENING_PROGRESS_PER_SUCCESS = 5f;
-    public static final float INITIAL_MAX_MANA = 20f;
+    @ConfigValue(value = "meditation.awakening_threshold", comment = "Progression d'éveil à atteindre pour éveiller le mana.", min = 1)
+    public static float AWAKENING_THRESHOLD = 100f;
+    @ConfigValue(value = "meditation.awakening_progress_per_success", comment = "Progression gagnée à chaque réussite.", min = 0)
+    public static float AWAKENING_PROGRESS_PER_SUCCESS = 5f;
+    @ConfigValue(value = "meditation.initial_max_mana", comment = "Mana maximum obtenu à l'éveil.", min = 1)
+    public static float INITIAL_MAX_MANA = 20f;
     // Après l'éveil
-    public static final float MANA_COST_PER_SECOND = 2f;
-    public static final float MAX_MANA_GAIN_PER_SUCCESS = 1f;
-    /** Plafond provisoire ; dépendra de plusieurs facteurs plus tard. */
-    public static final float MANA_HARD_CAP = 500000f;
+    @ConfigValue(value = "meditation.mana_cost_per_second", comment = "Mana dépensé par seconde de méditation (une fois éveillé).", min = 0)
+    public static float MANA_COST_PER_SECOND = 2f;
+    @ConfigValue(value = "meditation.max_mana_gain_per_success", comment = "Mana maximum gagné à chaque réussite de méditation (une fois éveillé).", min = 0)
+    public static float MAX_MANA_GAIN_PER_SUCCESS = 1f;
+    @ConfigValue(value = "mana.hard_cap", comment = "Plafond absolu du mana maximum, que la méditation et les dépenses de mana ne peuvent pas dépasser.", min = 1)
+    public static float MANA_HARD_CAP = 500000f;
     public static final int KEEPALIVE_TIMEOUT_TICKS = 15;
     public static void start(ServerPlayer player, MeditationData med) {
         if (med.isMeditating()) return;

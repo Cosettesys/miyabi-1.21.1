@@ -16,6 +16,8 @@ public final class MiyabiCommands {
         event.getDispatcher().register(Commands.literal("miyabi")
                 .then(ManaCommands.branch())
                 .then(MagicCommands.branch())
-                .then(ProgressionCommands.branch()));
+                .then(ProgressionCommands.branch())
+                .then(ProgressionCommands.branch())
+                .then(ConfigCommands.branch()));
     }
 }

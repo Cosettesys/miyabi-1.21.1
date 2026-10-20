@@ -1,5 +1,6 @@
 package net.cosette.miyabi.skills.battleaura;
 
+import net.cosette.miyabi.config.ConfigValue;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -23,12 +24,10 @@ import net.cosette.miyabi.skills.damage.ModDamageTypes;
 @EventBusSubscriber(modid = Miyabi.MODID)
 public final class BattleAuraTracker {
     private BattleAuraTracker() {}
-
-    /** Dégâts d'attaque minimum d'une arme pour que ses victimes comptent (épées, haches, pioches de fer...). */
-    private static final double MIN_WEAPON_DAMAGE = 4.0;
-    /** Un déplacement plus grand que ça en un tick (téléportation, glace...) n'est pas de la marche. */
-    private static final double MAX_STEP_PER_TICK = 1.0;
-
+    @ConfigValue(value = "battle_aura.min_weapon_damage", comment = "Dégâts d'attaque minimum d'une arme pour que ses victimes comptent dans l'entraînement (le poing compte toujours).", min = 0)
+    public static double MIN_WEAPON_DAMAGE = 4.0;
+    @ConfigValue(value = "battle_aura.max_step_per_tick", comment = "Un déplacement plus grand que ça en un tick (téléportation, glace...) ne compte pas comme de la marche, en blocs.", min = 0.1)
+    public static double MAX_STEP_PER_TICK = 1.0;
     private static PlayerProgressionData data(ServerPlayer player) {
         return player.getData(ModAttachments.PROGRESSION);
     }

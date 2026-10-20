@@ -114,16 +114,16 @@ public final class BattleAuraBuffManager {
         message(player, text);
     }
     private static double drainPerTick(int level) {
-        return BattleAuraBuffs.MANA_DRAIN_PER_SECOND.at(level) / 20.0;
+        return BattleAuraBuffs.manaDrainPerSecond(level) / 20.0;
     }
     private static void message(ServerPlayer player, String text) {
         player.displayClientMessage(Component.literal(text), true); // au-dessus de la hotbar
     }
     // --- Bonus de statistiques ---
     private static void applyModifiers(ServerPlayer player, int level) {
-        apply(player, Attributes.MOVEMENT_SPEED, MOVE_SPEED_ID, BattleAuraBuffs.MOVE_SPEED.at(level));
-        apply(player, Attributes.ATTACK_SPEED, ATTACK_SPEED_ID, BattleAuraBuffs.ATTACK_SPEED.at(level));
-        apply(player, Attributes.ATTACK_DAMAGE, ATTACK_DAMAGE_ID, BattleAuraBuffs.ATTACK_DAMAGE.at(level));
+        apply(player, Attributes.MOVEMENT_SPEED, MOVE_SPEED_ID, BattleAuraBuffs.moveSpeed(level));
+        apply(player, Attributes.ATTACK_SPEED, ATTACK_SPEED_ID, BattleAuraBuffs.attackSpeed(level));
+        apply(player, Attributes.ATTACK_DAMAGE, ATTACK_DAMAGE_ID, BattleAuraBuffs.attackDamage(level));
     }
     private static void apply(ServerPlayer player, Holder<Attribute> attribute, ResourceLocation id, double amount) {
         AttributeInstance instance = player.getAttribute(attribute);

@@ -1,5 +1,6 @@
 package net.cosette.miyabi;
 
+import net.cosette.miyabi.config.MiyabiConfig;
 import net.cosette.miyabi.progression.MeditationData;
 import net.cosette.miyabi.progression.PlayerProgressionData;
 import net.cosette.miyabi.registry.*;
@@ -69,19 +70,16 @@ public class Miyabi {
         ModParticles.PARTICLE_TYPES.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
         ModAttributes.ATTRIBUTES.register(modEventBus);
+
+        // Fichiers de configuration (config/miyabi) : créés au premier lancement, rechargeables avec /miyabi config reload
+        MiyabiConfig.reload();
         MiyabiGameRules.init();
 
         NeoForge.EVENT_BUS.register(this);
         modEventBus.addListener(this::addCreative);
-        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
     private void commonSetup(FMLCommonSetupEvent event) {
         LOGGER.info("HELLO FROM COMMON SETUP");
-        if (Config.LOG_DIRT_BLOCK.getAsBoolean()) {
-            LOGGER.info("DIRT BLOCK >> {}", BuiltInRegistries.BLOCK.getKey(Blocks.DIRT));
-        }
-        LOGGER.info("{}{}", Config.MAGIC_NUMBER_INTRODUCTION.get(), Config.MAGIC_NUMBER.getAsInt());
-        Config.ITEM_STRINGS.get().forEach((item) -> LOGGER.info("ITEM >> {}", item));
     }
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {

@@ -35,7 +35,7 @@ public final class ModAttachments {
             DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Miyabi.MODID);
     // --- Sauvegardées avec le joueur et conservées à la mort ---
     public static final Supplier<AttachmentType<ManaData>> MANA = persistent("mana",
-            () -> new ManaData(0f, 1, 0.5f), // le mana n'existe qu'après l'éveil
+            () -> new ManaData(0f, ManaData.DEFAULT_REGEN_FLAT, ManaData.DEFAULT_REGEN_SCALING_PERCENT), // le mana n'existe qu'après l'éveil
             ManaData::deserializeNBT, ManaData::serializeNBT, true);
     public static final Supplier<AttachmentType<SilentCastData>> SILENT_CAST = persistent("silent_cast",
             SilentCastData::new,

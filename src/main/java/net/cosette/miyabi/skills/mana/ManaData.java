@@ -1,5 +1,6 @@
 package net.cosette.miyabi.skills.mana;
 
+import net.cosette.miyabi.config.ConfigValue;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.HolderLookup;
 import net.neoforged.neoforge.attachment.AttachmentType;
@@ -11,7 +12,12 @@ import net.cosette.miyabi.Miyabi;
 import java.util.function.Supplier;
 
 public final class ManaData {
-    public static final int REGEN_INTERVAL_TICKS = 100;
+    @ConfigValue(value = "mana.regen_interval_ticks", comment = "Délai en ticks (20 = 1 s) après la dernière dépense de mana avant que la régénération reprenne, et entre deux régénérations.", min = 1)
+    public static int REGEN_INTERVAL_TICKS = 100;
+    @ConfigValue(value = "mana.default_regen_flat", comment = "Régénération fixe d'un nouveau joueur, en mana par intervalle.", min = 0)
+    public static int DEFAULT_REGEN_FLAT = 1;
+    @ConfigValue(value = "mana.default_regen_scaling_percent", comment = "Régénération d'un nouveau joueur en pourcentage du mana max par intervalle (0 à 100).", min = 0, max = 100)
+    public static float DEFAULT_REGEN_SCALING_PERCENT = 0.5f;
     private float current;
     private float max;
     private int regenFlat;
