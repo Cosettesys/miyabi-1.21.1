@@ -90,3 +90,20 @@ repo/
 /runs/client/saves/Test multi/session.lock
 /runs/client/usercache.json
 /runs/client/usernamecache.json
+/runs/client2/logs/2026-10-18-2.log.gz
+/runs/client2/logs/2026-10-20-1.log.gz
+/runs/client2/config/miyabi/magic/barrier.toml
+/runs/client2/command_history.txt
+/runs/client2/logs/debug-1.log.gz
+/runs/client2/logs/debug-2.log.gz
+/runs/client2/config/miyabi/magic/earth.toml
+/runs/client2/config/miyabi/magic/fire.toml
+/runs/client2/config/miyabi/magic/gravity.toml
+/runs/client2/config/miyabi/magic/healing.toml
+/runs/client2/config/miyabi/miyabi.toml
+/runs/client2/config/miyabi/styles/north_god.toml
+/runs/client2/config/miyabi/magic/summoning.toml
+/runs/client2/config/miyabi/styles/sword_god.toml
+/runs/client2/config/miyabi/magic/water.toml
+/runs/client2/config/miyabi/styles/water_god.toml
+/runs/client2/config/miyabi/magic/wind.toml
