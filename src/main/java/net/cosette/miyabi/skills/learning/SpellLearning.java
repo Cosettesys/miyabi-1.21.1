@@ -108,6 +108,37 @@ public final class SpellLearning {
         }
         return lowest;
     }
+    /**
+     * Lire un parchemin : le sort est débloqué avec sa formule exacte (apprentissage à vitesse normale).
+     * @return true si le parchemin doit être consommé
+     */
+    public static boolean readScroll(ServerPlayer player, SpellDefinition def) {
+        PlayerProgressionData data = player.getData(ModAttachments.PROGRESSION);
+        if (!data.isManaAwakened()) {
+            player.sendSystemMessage(Component.literal("Ces lignes ne me disent rien : mon " + Chat.mana("mana") + " n'est " + Chat.bad("pas éveillé") + "."));
+            return false;
+        }
+        if (!meetsRank(data, def)) {
+            player.sendSystemMessage(Component.literal("Ce sort " + Chat.bad("dépasse mon niveau") + " dans cette école."));
+            return false;
+        }
+        if (data.isSpellLearned(def.id())) {
+            player.sendSystemMessage(Component.literal("Je " + Chat.good("maîtrise déjà la formule") + " de ce sort."));
+            return false;
+        }
+        if (data.isSpellUnlocked(def.id()) && !data.isSpellSeenOnly(def.id())) {
+            player.sendSystemMessage(Component.literal("Je connais " + Chat.good("déjà la formule") + " de ce sort."));
+            return false;
+        }
+
+        boolean alreadySeen = data.isSpellUnlocked(def.id());
+        data.unlockSpell(def.id());
+        data.setSpellSeenOnly(def.id(), false);
+        player.sendSystemMessage(Component.literal(alreadySeen
+                ? "Je connais maintenant la " + Chat.good("formule exacte") + " de " + Chat.schools(def.schools()) + " : " + Chat.good(def.id()) + ". L'apprentissage ira plus vite."
+                : "J'ai lu la " + Chat.good("formule") + " de " + Chat.schools(def.schools()) + " : " + Chat.good(def.id()) + ". Je peux apprendre ce sort."));
+        return true;
+    }
     /** Écarte la direction du sort de façon bien visible. */
     public static Vec3 deviate(Vec3 direction, RandomSource random) {
         double dx = (0.25 + random.nextDouble() * 0.3) * (random.nextBoolean() ? 1 : -1);

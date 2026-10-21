@@ -109,6 +109,7 @@ public final class CastManager {
         var pos = player.position();
         cast.start(slot, player.level().getGameTime(), silent, pos.x, pos.y, pos.z);
         applyMovementEffect(player, silent);
+        IncantationSync.start(player, def, silent, effectiveDurationTicks(player, slot, silent), 0);
     }
     private static void useTechnique(ServerPlayer player, SwordTechniqueDefinition technique) {
         player.sendSystemMessage(Component.literal("Technique " + technique.id() + " ("
@@ -132,6 +133,7 @@ public final class CastManager {
         if (!cast.isCasting()) return;
         clearMovementEffect(player);
         cast.end(player.level().getGameTime());
+        IncantationSync.clear(player);
         player.sendSystemMessage(Component.literal("Incantation " + Chat.bad("annulée") + " (" + reason + ")."));
     }
     public static void finishCast(ServerPlayer player, CastData cast) {
@@ -140,6 +142,7 @@ public final class CastManager {
         int progressTicks = cast.getProgressTicks();
         clearMovementEffect(player);
         cast.end(player.level().getGameTime());
+        IncantationSync.clear(player);
         SpellDefinition def = spellInSlot(player, slot);
         if (def == null) {
             player.sendSystemMessage(Component.literal("Sort du slot " + (slot + 1) + " lancé (placeholder, pas encore d'effet)."));
@@ -217,6 +220,11 @@ public final class CastManager {
     public static void interruptByDamage(ServerPlayer player, CastData cast) {
         if (!cast.isCasting() || cast.isSilentAtStart()) return;
         cast.reduceProgressByPercent(DAMAGE_INTERRUPT_LOSS_PERCENT);
+        // Les mots affichés reculent avec la charge
+        SpellDefinition interrupted = spellInSlot(player, cast.getSlot());
+        if (interrupted != null) {
+            IncantationSync.start(player, interrupted, false, effectiveDurationTicks(player, cast.getSlot(), false), cast.getProgressTicks());
+        }
         player.sendSystemMessage(Component.literal("Incantation " + Chat.bad("perturbée") + " !"));
     }
     private static void applyMovementEffect(ServerPlayer player, boolean silent) {

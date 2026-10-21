@@ -1,5 +1,7 @@
 package net.cosette.miyabi.registry;
 
+import net.cosette.miyabi.item.SpellScrollItem;
+import net.cosette.miyabi.skills.SpellRegistry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -8,6 +10,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -32,10 +35,23 @@ public final class ModItems {
                             EquipmentSlotGroup.HAND)
                     .build()),
             MagicSchool.WATER, 0.80f, 0.25f));
+    /** Parchemin de sort : le sort enseigné est dans le composant miyabi:taught_spell. */
+    public static final DeferredItem<SpellScrollItem> SPELL_SCROLL =
+            ITEMS.register("spell_scroll", () -> new SpellScrollItem(new Item.Properties().stacksTo(16)));
+    /** Oeuf d'apparition de l'entraîneur. */
+    public static final DeferredItem<DeferredSpawnEggItem> TRAINER_SPAWN_EGG =
+            ITEMS.register("trainer_spawn_egg", () -> new DeferredSpawnEggItem(ModEntities.TRAINER, 0x3355AA, 0xE8E0C0, new Item.Properties()));
     @SubscribeEvent
     public static void onBuildCreativeTab(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.COMBAT) {
             event.accept(AQUA_HEARTIA);
+            // Un parchemin par sort
+            for (String spellId : SpellRegistry.ids()) {
+                event.accept(SpellScrollItem.create(spellId));
+            }
+        }
+        if (event.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {
+            event.accept(TRAINER_SPAWN_EGG);
         }
     }
 }

@@ -31,6 +31,8 @@ public final class TechniqueManager {
     public static double MIN_ALIGNMENT = 0.866;
     @ConfigValue(value = "sword_techniques.slash_distance", comment = "Distance entre les yeux du joueur et la trace visuelle du coup, en blocs.", min = 0, max = 8)
     public static double SLASH_DISTANCE = 1.6;
+    @ConfigValue(value = "sword_techniques.allow_void_training", comment = "Accroupi, une technique peut être utilisée sans cible pour s'entraîner dans le vide (apprentissage et maîtrise comptent, aucun dégât).")
+    public static boolean ALLOW_VOID_TRAINING = true;
     public static void use(ServerPlayer player, SwordTechniqueDefinition technique) {
         PlayerProgressionData progression = player.getData(ModAttachments.PROGRESSION);
         TechniqueCooldownData cooldown = player.getData(ModAttachments.TECHNIQUE_COOLDOWN);
@@ -62,7 +64,9 @@ public final class TechniqueManager {
             return;
         }
         LivingEntity target = findTarget(player, technique.reach());
-        if (target == null) {
+        // Accroupi, on peut s'entraîner dans le vide : la technique est exécutée sans cible, donc sans dégâts.
+        boolean training = target == null;
+        if (training && !(ALLOW_VOID_TRAINING && player.isShiftKeyDown())) {
             player.displayClientMessage(Component.literal("Aucune cible à portée."), true);
             return;
         }
@@ -108,7 +112,9 @@ public final class TechniqueManager {
             DamageResolver.deal(player, source, damage * SpellLearning.BACKFIRE_EFFECT_FRACTION, technique.physicalType(), player, "La technique");
             return;
         }
-        DamageResolver.deal(target, source, damage, technique.physicalType(), player, "La technique");
+        if (!training) {
+            DamageResolver.deal(target, source, damage, technique.physicalType(), player, "La technique");
+        }
         if (learned) {
             MasteryManager.onTechniqueUse(player, technique);
         }

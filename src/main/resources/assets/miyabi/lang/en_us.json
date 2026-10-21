@@ -23,5 +23,9 @@
   "item.miyabi.aqua_heartia": "Aqua Heartia",
   "attribute.name.miyabi.casting_speed": "Casting Speed",
   "effect.miyabi.wet": "Wet",
-  "effect.miyabi.burned": "Burned"
+  "effect.miyabi.burned": "Burned",
+  "item.miyabi.spell_scroll": "Spell Scroll",
+  "item.miyabi.trainer_spawn_egg": "Trainer Spawn Egg",
+  "entity.miyabi.trainer": "Trainer",
+  "container.miyabi.trainer": "Trainer"
 }

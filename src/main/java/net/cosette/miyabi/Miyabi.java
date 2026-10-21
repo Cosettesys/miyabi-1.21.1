@@ -71,6 +71,8 @@ public class Miyabi {
         ModItems.ITEMS.register(modEventBus);
         ModAttributes.ATTRIBUTES.register(modEventBus);
         ModEffects.EFFECTS.register(modEventBus);
+        ModMenus.MENUS.register(modEventBus);
+        ModComponents.COMPONENTS.register(modEventBus);
 
         // Fichiers de configuration (config/miyabi) : créés au premier lancement, rechargeables avec /miyabi config reload
         MiyabiConfig.reload();

@@ -38,7 +38,7 @@ run/
 **/src/generated/**/.cache/
 repo/
 !**/src/**/repo/
-/src/main/resources/assets/miyabi/textures/
+/src/main/resources/assets/
 /runs/client/saves/Test multi/playerdata/2a717c8f-118e-3474-bc2d-d61b924015ff.dat
 /runs/client/saves/Test multi/playerdata/2a717c8f-118e-3474-bc2d-d61b924015ff.dat_old
 /runs/client/saves/Test multi/advancements/2a717c8f-118e-3474-bc2d-d61b924015ff.json
@@ -107,3 +107,5 @@ repo/
 /runs/client2/config/miyabi/magic/water.toml
 /runs/client2/config/miyabi/styles/water_god.toml
 /runs/client2/config/miyabi/magic/wind.toml
+/src/main/resources/assets/
+/src/main/resources/assets/

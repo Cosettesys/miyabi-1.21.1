@@ -26,5 +26,6 @@ public final class MiyabiNetworking {
         registrar.playToClient(SlotHudPayload.TYPE, SlotHudPayload.STREAM_CODEC, SlotHudHandlers::onSlotHud);
         registrar.playToServer(AuraInputPayload.TYPE, AuraInputPayload.STREAM_CODEC, AuraPacketHandlers::onAuraInput);
         registrar.playToClient(AuraStatePayload.TYPE, AuraStatePayload.STREAM_CODEC, AuraPacketHandlers::onAuraState);
+        registrar.playToClient(IncantationPayload.TYPE, IncantationPayload.STREAM_CODEC, IncantationHandlers::onIncantation);
     }
 }

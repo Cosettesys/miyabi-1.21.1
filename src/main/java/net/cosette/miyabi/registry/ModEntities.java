@@ -1,5 +1,6 @@
 package net.cosette.miyabi.registry;
 
+import net.cosette.miyabi.npc.TrainerEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -21,4 +22,10 @@ public final class ModEntities {
                     .clientTrackingRange(64)
                     .updateInterval(10)
                     .build("spell_projectile"));
+    public static final DeferredHolder<EntityType<?>, EntityType<TrainerEntity>> TRAINER =
+            ENTITY_TYPES.register("trainer", () -> EntityType.Builder
+                    .<TrainerEntity>of(TrainerEntity::new, MobCategory.MISC)
+                    .sized(0.6f, 1.95f)
+                    .clientTrackingRange(10)
+                    .build("trainer"));
 }
