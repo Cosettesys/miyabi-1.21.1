@@ -42,7 +42,7 @@ public final class CastManager {
     /** Coût de base du sort, réduit par la maîtrise du joueur sur ce sort. */
     public static float effectiveManaCost(ServerPlayer player, SpellDefinition def) {
         int casts = player.getData(ModAttachments.PROGRESSION).getSpellCasts(def.id());
-        return def.manaCost() * MasteryEffects.manaCostMultiplier(casts) * StaffBonuses.costMultiplier(player, def.school());
+        return def.manaCost() * MasteryEffects.manaCostMultiplier(casts) * StaffBonuses.costMultiplier(player, def.schools());
     }
     /** Sort actuellement assigné à ce slot pour ce joueur, ou null si le slot est vide. */
     public static SpellDefinition spellInSlot(ServerPlayer player, int slot) {
@@ -95,7 +95,7 @@ public final class CastManager {
             return;
         }
         // On ne peut ni lancer ni apprendre un sort d'un rang supérieur au sien dans l'école.
-        if (!progression.getSchoolRank(def.school()).isAtLeast(def.rank())) {
+        if (!SpellLearning.meetsRank(progression, def)) {
             player.sendSystemMessage(Component.literal("Ce sort " + Chat.bad("dépasse mon niveau") + " dans cette école."));
             return;
         }
@@ -159,19 +159,19 @@ public final class CastManager {
             // Chaque tentative fait monter la jauge d'apprentissage, qu'elle réussisse ou non.
             float gaugeBefore = progression.getSpellLearning(def.id());
             float gaugeAfter = Math.min(SpellLearning.LEARNED,
-                    gaugeBefore + SpellLearning.gaugeGain(progression.getSchoolRank(def.school()), def.rank(),
+                    gaugeBefore + SpellLearning.gaugeGain(SpellLearning.learningRank(progression, def), def.rank(),
                             progression.isSpellSeenOnly(def.id())));
             progression.setSpellLearning(def.id(), gaugeAfter);
             if (gaugeAfter >= SpellLearning.LEARNED) {
                 player.sendSystemMessage(Component.literal("J'ai " + Chat.good("appris") + " "
-                        + Chat.school(def.school()) + " : " + Chat.good(def.id()) + " !"));
+                        + Chat.schools(def.schools()) + " : " + Chat.good(def.id()) + " !"));
             }
             if (random.nextFloat() >= SpellLearning.successChance(gaugeBefore)) {
                 spendMana(mana, manaCost); // un échec consomme quand même le mana
                 player.sendSystemMessage(Component.literal("Le sort " + Chat.bad("échoue") + "."));
                 return;
             }
-            debuffs = SpellLearning.rollDebuffs(random, def.effect() instanceof DamageEffect);
+            debuffs = SpellLearning.rollDebuffs(random, def.canBackfire());
             if (debuffs.any()) {
                 player.sendSystemMessage(Component.literal(
                         "Le sort est " + Chat.bad("instable") + " : " + debuffs.describe() + "."));
@@ -188,6 +188,12 @@ public final class CastManager {
             return;
         }
         spendMana(mana, manaCost);
+        if (debuffs.backfire()) {
+            // Retour de flamme : le sort est lancé sur le lanceur lui-même (dégâts, soin, états) à une fraction de sa force.
+            def.effect().apply(player, def,
+                    new SpellCastContext(player, player, silent, intensityPercent, SpellLearning.BACKFIRE_EFFECT_FRACTION));
+            return;
+        }
         if (learned) {
             MasteryManager.onSpellCast(player, def);
         }
@@ -201,11 +207,6 @@ public final class CastManager {
                 player.level(), player, direction.x * speed, direction.y * speed, direction.z * speed,
                 def.id(), silent, intensityPercent, effectScale);
         player.level().addFreshEntity(projectile);
-        if (debuffs.selfDamage()) {
-            // Retour de flamme : le sort touche aussi son lanceur.
-            float selfScale = SpellLearning.SELF_DAMAGE_FRACTION * effectScale;
-            def.effect().apply(player, def, new SpellCastContext(player, player, silent, intensityPercent, selfScale));
-        }
         SpellLearning.unlockForWitnesses(player, def);
     }
     /** Dépense du mana ; la réserve grandit lentement (plafonnée comme pour la méditation). */

@@ -21,5 +21,7 @@
   "key.miyabi.menu": "Open Menu",
   "key.miyabi.aura": "Battle Aura",
   "item.miyabi.aqua_heartia": "Aqua Heartia",
-  "attribute.name.miyabi.casting_speed": "Casting Speed"
+  "attribute.name.miyabi.casting_speed": "Casting Speed",
+  "effect.miyabi.wet": "Wet",
+  "effect.miyabi.burned": "Burned"
 }

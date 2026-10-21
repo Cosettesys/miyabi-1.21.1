@@ -3,6 +3,7 @@ package net.cosette.miyabi.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.mojang.logging.LogUtils;
+import net.cosette.miyabi.skills.magic.status.ElementalReactions;
 import net.neoforged.fml.loading.FMLPaths;
 import net.cosette.miyabi.progression.MagicRank;
 import net.cosette.miyabi.progression.MasteryEffects;
@@ -47,7 +48,7 @@ public final class MiyabiConfig {
     private static final Class<?>[] BOUND_CLASSES = {
             ManaData.class, MeditationManager.class, CastManager.class, StaffBonuses.class,
             MasteryManager.class, MasteryEffects.class, SpellLearning.class,
-            BattleAuraLevels.class, BattleAuraBuffs.class, BattleAuraTracker.class, TechniqueManager.class
+            BattleAuraLevels.class, BattleAuraBuffs.class, BattleAuraTracker.class, TechniqueManager.class, ElementalReactions.class
     };
     private static final Map<String, String> SECTION_COMMENTS = new LinkedHashMap<>();
     static {
@@ -86,6 +87,10 @@ public final class MiyabiConfig {
             for (Class<?> clazz : BOUND_CLASSES) {
                 ConfigBinder.bind(config, clazz, report);
             }
+            // Anciennes clés, renommées ou retirées
+            config.remove("learning.self_damage_chance");
+            config.remove("learning.self_damage_fraction");
+            SECTION_COMMENTS.put("reactions", "Réactions entre éléments (par exemple la foudre sur une cible mouillée).");
             bindRanks(config, report);
             bindPhysicalTypes(config, report);
             SECTION_COMMENTS.forEach((section, comment) -> {

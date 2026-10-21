@@ -20,30 +20,32 @@ public final class MasteryManager {
     public static int SPELL_MASTERY_CASTS = 200;
     @ConfigValue(value = "mastery.technique_uses_to_master", comment = "Nombre d'utilisations pour maîtriser une technique (recharge au minimum).", min = 1)
     public static int TECHNIQUE_MASTERY_USES = 200;
+    /** Appelée une fois par sort réellement lancé. */
     public static void onSpellCast(ServerPlayer player, SpellDefinition def) {
         PlayerProgressionData data = player.getData(ModAttachments.PROGRESSION);
+        // Maîtrise du sort lui-même : compte tous les lancers, quel que soit le rang
         int casts = data.incrementSpellCasts(def.id());
         if (MasteryEffects.masterySteps(casts) > MasteryEffects.masterySteps(casts - 1)) {
-            player.sendSystemMessage(Component.literal("Je me sens plus à l'aise avec " + Chat.school(def.school()) + " : " + Chat.good(def.id()) + "."));
+            player.sendSystemMessage(Component.literal("Je me sens plus à l'aise avec " + Chat.schools(def.schools()) + " : " + Chat.good(def.id()) + "."));
         }
         if (casts == SPELL_MASTERY_CASTS) {
             player.sendSystemMessage(Component.literal("Je " + Chat.good("maîtrise") + " désormais " + def.id() + "."));
         }
-        MagicSchool school = def.school();
-        MagicRank current = data.getSchoolRank(school);
-        MagicRank next = current.next();
-        if (def.rank() != current || next == null) {
-            return;
-        }
-        int points = data.getSchoolMastery(school) + MASTERY_PER_CAST;
-        int required = current.getMasteryToNext();
-        if (points >= required) {
-            data.setSchoolRank(school, next);
-            data.setSchoolMastery(school, points - required);
-            player.sendSystemMessage(Component.literal(
-                    "Rang " + Chat.school(school) + " : " + Chat.rank(current) + " -> " + Chat.rank(next) + " !"));
-        } else {
-            data.setSchoolMastery(school, points);
+        // Maîtrise de rang : pour chaque école du sort où il est du rang actuel du joueur (un sort hybride fait progresser les deux)
+        for (MagicSchool school : def.schools()) {
+            MagicRank current = data.getSchoolRank(school);
+            MagicRank next = current.next();
+            if (def.rank() != current || next == null) continue;
+            int points = data.getSchoolMastery(school) + MASTERY_PER_CAST;
+            int required = current.getMasteryToNext();
+            if (points >= required) {
+                data.setSchoolRank(school, next);
+                data.setSchoolMastery(school, points - required);
+                player.sendSystemMessage(Component.literal(
+                        "Rang " + Chat.school(school) + " : " + Chat.rank(current) + " -> " + Chat.rank(next) + " !"));
+            } else {
+                data.setSchoolMastery(school, points);
+            }
         }
     }
     public static void onTechniqueUse(ServerPlayer player, SwordTechniqueDefinition technique) {

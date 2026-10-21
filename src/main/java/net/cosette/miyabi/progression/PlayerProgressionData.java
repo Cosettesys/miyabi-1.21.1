@@ -49,6 +49,10 @@ public final class PlayerProgressionData {
     private final Map<String, Float> spellLearning = new HashMap<>();
     /** Sorts débloqués en les voyant lancer (sans en lire la formule) : ils s'apprennent plus lentement. */
     private final Set<String> spellSeenOnly = new HashSet<>();
+    /** Jauge d'apprentissage des techniques : absent = pas débloquée, 0 à 99 = à apprendre, 100 = apprise. */
+    private final Map<String, Float> techniqueLearning = new HashMap<>();
+    /** Techniques débloquées en les voyant utiliser (sans formation) : elles s'apprennent plus lentement. */
+    private final Set<String> techniqueSeenOnly = new HashSet<>();
     public int getSchoolMastery(MagicSchool school) {
         return schoolMastery.getOrDefault(school, 0);
     }
@@ -110,6 +114,39 @@ public final class PlayerProgressionData {
             spellLearning.put(spellId, Math.min(100f, value));
         }
     }
+    public boolean isTechniqueUnlocked(String techniqueId) {
+        return techniqueLearning.containsKey(techniqueId);
+    }
+    public float getTechniqueLearning(String techniqueId) {
+        return techniqueLearning.getOrDefault(techniqueId, 0f);
+    }
+    public boolean isTechniqueLearned(String techniqueId) {
+        return getTechniqueLearning(techniqueId) >= 100f;
+    }
+    public void unlockTechnique(String techniqueId) {
+        techniqueLearning.putIfAbsent(techniqueId, 0f);
+    }
+    /** Fixe la jauge d'apprentissage (0 à 100) ; une valeur négative reverrouille la technique. */
+    public void setTechniqueLearning(String techniqueId, float value) {
+        if (value < 0f) {
+            techniqueLearning.remove(techniqueId);
+        } else {
+            techniqueLearning.put(techniqueId, Math.min(100f, value));
+        }
+    }
+    public boolean isTechniqueSeenOnly(String techniqueId) {
+        return techniqueSeenOnly.contains(techniqueId);
+    }
+    public void setTechniqueSeenOnly(String techniqueId, boolean seenOnly) {
+        if (seenOnly) {
+            techniqueSeenOnly.add(techniqueId);
+        } else {
+            techniqueSeenOnly.remove(techniqueId);
+        }
+    }
+    public Map<String, Float> getAllTechniqueLearning() {
+        return Collections.unmodifiableMap(techniqueLearning);
+    }
     public boolean isSpellSeenOnly(String spellId) {
         return spellSeenOnly.contains(spellId);
     }
@@ -170,6 +207,16 @@ public final class PlayerProgressionData {
             seen.putBoolean(id, true);
         }
         tag.put("spellSeenOnly", seen);
+        CompoundTag techLearning = new CompoundTag();
+        for (Map.Entry<String, Float> entry : techniqueLearning.entrySet()) {
+            techLearning.putFloat(entry.getKey(), entry.getValue());
+        }
+        tag.put("techniqueLearning", techLearning);
+        CompoundTag techSeen = new CompoundTag();
+        for (String id : techniqueSeenOnly) {
+            techSeen.putBoolean(id, true);
+        }
+        tag.put("techniqueSeenOnly", techSeen);
         CompoundTag counters = new CompoundTag();
         for (AuraCriterion criterion : AuraCriterion.values()) {
             counters.putDouble(criterion.name(), getAuraCounter(criterion));
@@ -221,6 +268,20 @@ public final class PlayerProgressionData {
         CompoundTag seen = tag.getCompound("spellSeenOnly");
         for (String key : seen.getAllKeys()) {
             data.spellSeenOnly.add(key);
+        }
+        CompoundTag techLearning = tag.getCompound("techniqueLearning");
+        for (String key : techLearning.getAllKeys()) {
+            data.techniqueLearning.put(key, techLearning.getFloat(key));
+        }
+        CompoundTag techSeen = tag.getCompound("techniqueSeenOnly");
+        for (String key : techSeen.getAllKeys()) {
+            data.techniqueSeenOnly.add(key);
+        }
+        // Anciennes sauvegardes : une technique déjà utilisée est considérée comme apprise.
+        for (Map.Entry<String, Integer> entry : data.techniqueUses.entrySet()) {
+            if (entry.getValue() > 0) {
+                data.techniqueLearning.putIfAbsent(entry.getKey(), 100f);
+            }
         }
         // Anciennes sauvegardes : un sort déjà lancé est considéré comme appris.
         for (Map.Entry<String, Integer> entry : data.spellCasts.entrySet()) {

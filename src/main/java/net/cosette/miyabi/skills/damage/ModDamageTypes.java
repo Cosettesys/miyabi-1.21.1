@@ -5,7 +5,9 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.damagesource.DamageType;
 import net.cosette.miyabi.Miyabi;
+import net.cosette.miyabi.skills.magic.DamageElement;
 import net.cosette.miyabi.skills.magic.MagicSchool;
+import net.cosette.miyabi.skills.magic.SpellDefinition;
 
 public final class ModDamageTypes {
     private ModDamageTypes() {}
@@ -14,6 +16,7 @@ public final class ModDamageTypes {
     public static final ResourceKey<DamageType> EARTH_MAGIC = key("earth_magic");
     public static final ResourceKey<DamageType> WIND_MAGIC = key("wind_magic");
     public static final ResourceKey<DamageType> GRAVITY_MAGIC = key("gravity_magic");
+    public static final ResourceKey<DamageType> LIGHTNING_MAGIC = key("lightning_magic");
     public static final ResourceKey<DamageType> ARCANE_MAGIC = key("arcane_magic");
     public static final ResourceKey<DamageType> SWORD_TECHNIQUE = key("sword_technique");
     private static ResourceKey<DamageType> key(String name) {
@@ -28,5 +31,9 @@ public final class ModDamageTypes {
             case GRAVITY -> GRAVITY_MAGIC;
             default -> ARCANE_MAGIC;
         };
+    }
+    /** Type de dégâts d'un sort : la foudre a le sien, les autres suivent leur école principale. */
+    public static ResourceKey<DamageType> forSpell(SpellDefinition spell) {
+        return spell.damageElement() == DamageElement.LIGHTNING ? LIGHTNING_MAGIC : forSchool(spell.school());
     }
 }

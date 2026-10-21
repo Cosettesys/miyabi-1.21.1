@@ -6,6 +6,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
@@ -37,6 +38,8 @@ public class MiyabiMenuScreen extends Screen {
     private SwordStyle selectedStyle = null;
     private String selectedEntry = null;
     private int scroll = 0;
+    private int detailScroll = 0;      // défilement du détail du sort ou de la technique
+    private int detailMaxScroll = 0;
     private boolean draggingScrollbar = false;
     private int panelH, left, top, slotY, mainY;
     private Button magicButton;
@@ -165,6 +168,7 @@ public class MiyabiMenuScreen extends Screen {
     }
     private void resetListState() {
         scroll = 0;
+        detailScroll = 0;
         selectedEntry = null;
         draggingScrollbar = false;
     }
@@ -283,7 +287,7 @@ public class MiyabiMenuScreen extends Screen {
         }
         List<ListEntry> entries = new ArrayList<>();
         for (MenuDataPayload.SpellEntry s : data.spells()) {
-            if (!s.school().equals(selectedSchool.name())) continue;
+            if (!inSchool(s, selectedSchool)) continue;
             entries.add(new ListEntry(s.id(), s.id() + " [" + s.rank() + "]", !s.learned()));
         }
         renderEntries(g, x, entries, "Aucun sort pour cette école pour l'instant.");
@@ -299,7 +303,7 @@ public class MiyabiMenuScreen extends Screen {
         List<ListEntry> entries = new ArrayList<>();
         for (MenuDataPayload.TechniqueEntry t : data.techniques()) {
             if (!t.style().equals(selectedStyle.name())) continue;
-            entries.add(new ListEntry(t.id(), t.id() + " [" + t.rank() + "]", false));
+            entries.add(new ListEntry(t.id(), t.id() + " [" + t.rank() + "]", !t.learned()));
         }
         renderEntries(g, x, entries, "Aucune technique pour ce style pour l'instant.");
         renderTechniqueDetails(g);
@@ -392,6 +396,7 @@ public class MiyabiMenuScreen extends Screen {
             for (EntryRow row : entryRows) {
                 if (mouseX >= row.x1() && mouseX <= row.x2() && mouseY >= row.y1() && mouseY <= row.y2()) {
                     selectedEntry = row.id();
+                    detailScroll = 0;
                     return true;
                 }
             }
@@ -416,7 +421,12 @@ public class MiyabiMenuScreen extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (isList()) {
-            scroll = Mth.clamp(scroll - (int) Math.signum(scrollY), 0, maxScroll(currentTotal()));
+            int delta = (int) Math.signum(scrollY);
+            if (mouseX >= detailX() - 4) {
+                detailScroll = Mth.clamp(detailScroll - delta, 0, detailMaxScroll); // molette sur le détail
+            } else {
+                scroll = Mth.clamp(scroll - delta, 0, maxScroll(currentTotal()));
+            }
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
@@ -445,43 +455,109 @@ public class MiyabiMenuScreen extends Screen {
     private static String num(float value) {
         return String.format("%.1f", value);
     }
-    /** Moitié droite du menu : détails du sort sélectionné. */
+    /** Un sort hybride est listé dans le menu de chacune de ses deux écoles. */
+    private static boolean inSchool(MenuDataPayload.SpellEntry spell, MagicSchool school) {
+        return spell.school().equals(school.name()) || spell.school2().equals(school.name());
+    }
+    /** Ligne du détail : du texte (retour à la ligne automatique) ou une jauge sans chiffres (bar entre 0 et 1). */
+    private record DetailLine(String text, int color, float bar) {
+        static DetailLine text(String text, int color) { return new DetailLine(text, color, -1f); }
+        static DetailLine gauge(String label, float ratio) { return new DetailLine(label, 0xFFFFFFFF, ratio); }
+    }
+    private record DetailRow(FormattedCharSequence text, int color, float bar) {}
+    /** Moitié droite du menu : détail défilable (molette sur cette moitié) avec barre de défilement. */
+    private void renderDetails(GuiGraphics g, List<DetailLine> lines) {
+        int x = detailX();
+        int width = left + PANEL_W - 18 - x;
+        List<DetailRow> rows = new ArrayList<>();
+        for (DetailLine line : lines) {
+            if (line.bar() >= 0f) {
+                rows.add(new DetailRow(Component.literal(line.text()).getVisualOrderText(), line.color(), line.bar()));
+            } else if (line.text().isEmpty()) {
+                rows.add(new DetailRow(FormattedCharSequence.EMPTY, line.color(), -1f));
+            } else {
+                for (FormattedCharSequence part : this.font.split(Component.literal(line.text()), width)) {
+                    rows.add(new DetailRow(part, line.color(), -1f));
+                }
+            }
+        }
+        int visible = Math.max(1, (listBottom() - listTop()) / LINE_H);
+        detailMaxScroll = Math.max(0, rows.size() - visible);
+        detailScroll = Mth.clamp(detailScroll, 0, detailMaxScroll);
+        int y = listTop();
+        for (int i = detailScroll; i < Math.min(rows.size(), detailScroll + visible); i++) {
+            DetailRow row = rows.get(i);
+            g.drawString(this.font, row.text(), x, y, row.color());
+            if (row.bar() >= 0f) {
+                int barX = x + 90;
+                int barWidth = 90;
+                g.fill(barX - 1, y, barX + barWidth + 1, y + 9, 0xFF000000);
+                g.fill(barX, y + 1, barX + barWidth, y + 8, 0xFF333333);
+                g.fill(barX, y + 1, barX + Math.round(barWidth * Mth.clamp(row.bar(), 0f, 1f)), y + 8,
+                        row.bar() >= 1f ? 0xFF55DD55 : 0xFFCC9933);
+            }
+            y += LINE_H;
+        }
+        if (detailMaxScroll > 0) {
+            int trackX = left + PANEL_W - 12;
+            int trackTop = listTop();
+            int trackHeight = listBottom() - listTop();
+            g.fill(trackX, trackTop, trackX + 4, trackTop + trackHeight, 0xFF222222);
+            int thumbHeight = Math.max(10, trackHeight * visible / rows.size());
+            int thumbY = trackTop + (trackHeight - thumbHeight) * detailScroll / detailMaxScroll;
+            g.fill(trackX, thumbY, trackX + 4, thumbY + thumbHeight, 0xFFAAAAAA);
+        }
+    }
     private void renderSpellDetails(GuiGraphics g) {
         if (selectedEntry == null) return;
         for (MenuDataPayload.SpellEntry s : data.spells()) {
             if (!s.id().equals(selectedEntry)) continue;
-            int x = detailX();
-            int y = listTop();
-            y = line(g, s.id(), x, y, YELLOW);
-            y = line(g, "École : " + s.school() + "  |  Rang : " + s.rank(), x, y, WHITE);
-            y = line(g, s.learned() ? "Sort appris" : "Sort à apprendre", x, y, s.learned() ? 0xFF55FF55 : DIM);
-            y += 4;
-            y = line(g, "Coût en mana : " + num(s.manaCost()), x, y, WHITE);
+
+            List<DetailLine> lines = new ArrayList<>();
+            lines.add(DetailLine.text(s.id(), YELLOW));
+            String schools = s.school2().isEmpty() ? "École : " + s.school() : "Écoles : " + s.school() + " + " + s.school2();
+            lines.add(DetailLine.text(schools + "  |  Rang : " + s.rank(), WHITE));
+            lines.add(DetailLine.text(s.learned() ? "Sort appris" : "Sort à apprendre", s.learned() ? 0xFF55FF55 : DIM));
+            lines.add(DetailLine.gauge(s.learned() ? "Maîtrise" : "Apprentissage", s.learned() ? s.mastery() : s.learning()));
+            lines.add(DetailLine.text("", WHITE));
+            lines.add(DetailLine.text("Coût en mana : " + num(s.manaCost()), WHITE));
             if (s.damage() > 0f) {
-                y = line(g, "Dégâts : " + num(s.damage()) + " (" + s.physical() + ")", x, y, WHITE);
+                lines.add(DetailLine.text("Dégâts : " + num(s.damage()) + " (" + s.physical() + ")", WHITE));
             }
             if (s.heal() > 0f) {
-                y = line(g, "Soin : " + num(s.heal()), x, y, WHITE);
+                lines.add(DetailLine.text("Soin : " + num(s.heal()), WHITE));
             }
-            y = line(g, "Incantation : " + num(s.castSeconds()) + " s", x, y, WHITE);
-            line(g, "Intensité max : " + Math.round(s.maxIntensity()) + " %", x, y, WHITE);
+            lines.add(DetailLine.text("Temps de cast : " + num(s.castSeconds()) + " s", WHITE));
+            lines.add(DetailLine.text("Intensité max : " + Math.round(s.maxIntensity()) + " %", WHITE));
+            if (!s.description().isEmpty()) {
+                lines.add(DetailLine.text("", WHITE));
+                lines.add(DetailLine.text(s.description(), GREY));
+            }
+            if (!s.incantation().isEmpty()) {
+                lines.add(DetailLine.text("", WHITE));
+                lines.add(DetailLine.text("Incantation :", YELLOW));
+                lines.add(DetailLine.text(s.incantation(), 0xFFAACCFF));
+            }
+            renderDetails(g, lines);
             return;
         }
     }
-    /** Moitié droite du menu : détails de la technique sélectionnée. */
     private void renderTechniqueDetails(GuiGraphics g) {
         if (selectedEntry == null) return;
         for (MenuDataPayload.TechniqueEntry t : data.techniques()) {
             if (!t.id().equals(selectedEntry)) continue;
-            int x = detailX();
-            int y = listTop();
-            y = line(g, t.id(), x, y, YELLOW);
-            y = line(g, "Style : " + t.style() + "  |  Rang : " + t.rank(), x, y, WHITE);
-            y += 4;
-            y = line(g, "Dégâts : " + num(t.damage()) + " (" + t.physical() + ")", x, y, WHITE);
-            y = line(g, "Recharge : " + num(t.cooldownSeconds()) + " s", x, y, WHITE);
-            y = line(g, "Portée : " + num(t.reach()) + " blocs", x, y, WHITE);
-            line(g, "Arme requise : " + (t.weapon().isEmpty() ? "aucune" : t.weapon()), x, y, WHITE);
+
+            List<DetailLine> lines = new ArrayList<>();
+            lines.add(DetailLine.text(t.id(), YELLOW));
+            lines.add(DetailLine.text("Style : " + t.style() + "  |  Rang : " + t.rank(), WHITE));
+            lines.add(DetailLine.text(t.learned() ? "Technique apprise" : "Technique à apprendre", t.learned() ? 0xFF55FF55 : DIM));
+            lines.add(DetailLine.gauge(t.learned() ? "Maîtrise" : "Apprentissage", t.learned() ? t.mastery() : t.learning()));
+            lines.add(DetailLine.text("", WHITE));
+            lines.add(DetailLine.text("Dégâts : " + num(t.damage()) + " (" + t.physical() + ")", WHITE));
+            lines.add(DetailLine.text("Recharge : " + num(t.cooldownSeconds()) + " s", WHITE));
+            lines.add(DetailLine.text("Portée : " + num(t.reach()) + " blocs", WHITE));
+            lines.add(DetailLine.text("Arme requise : " + (t.weapon().isEmpty() ? "aucune" : t.weapon()), WHITE));
+            renderDetails(g, lines);
             return;
         }
     }

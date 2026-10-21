@@ -2,12 +2,14 @@ package net.cosette.miyabi.skills;
 
 import net.cosette.miyabi.skills.magic.SpellDefinition;
 import net.cosette.miyabi.skills.magic.earth.SlashingTest;
-import net.cosette.miyabi.skills.magic.fire.FireTestSpells;
 import net.cosette.miyabi.skills.magic.fire.Fireball;
 import net.cosette.miyabi.skills.magic.water.AquaStaffTest;
 import net.cosette.miyabi.skills.magic.water.BluntTest;
 import net.cosette.miyabi.skills.magic.water.WaterTestSpells;
 import net.cosette.miyabi.skills.magic.wind.PiercingTest;
+import net.cosette.miyabi.skills.magic.fire.BurnTest;
+import net.cosette.miyabi.skills.magic.hybrid.LightningTest;
+import net.cosette.miyabi.skills.magic.water.WetTest;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -28,7 +30,9 @@ public final class SpellRegistry {
         register(PiercingTest.DEFINITION);
         register(AquaStaffTest.DEFINITION);
         // Sorts factices pour tester le menu. À supprimer plus tard.
-        FireTestSpells.all().forEach(SpellRegistry::register);
+        register(BurnTest.DEFINITION);
+        register(WetTest.DEFINITION);
+        register(LightningTest.DEFINITION);
         WaterTestSpells.all().forEach(SpellRegistry::register);
         current = new LinkedHashMap<>(BASE);
     }

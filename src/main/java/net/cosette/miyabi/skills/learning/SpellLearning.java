@@ -1,5 +1,6 @@
 package net.cosette.miyabi.skills.learning;
 
+import net.cosette.miyabi.skills.magic.MagicSchool;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -42,10 +43,10 @@ public final class SpellLearning {
     // --- Malus d'un sort réussi mais pas appris à 100 % ---
     @ConfigValue(value = "learning.debuff_chance", comment = "Chance de chacun des malus mana doublé, effet divisé par 2 et trajectoire déviée (indépendants, 0 à 1).", min = 0, max = 1)
     public static float DEBUFF_CHANCE = 0.5f;
-    @ConfigValue(value = "learning.self_damage_chance", comment = "Chance d'un retour de flamme (sorts de dégâts seulement). Quand il se produit, les autres malus ne se produisent pas.", min = 0, max = 1)
-    public static float SELF_DAMAGE_CHANCE = 0.20f;
-    @ConfigValue(value = "learning.self_damage_fraction", comment = "Part des dégâts du sort infligée au lanceur en cas de retour de flamme.", min = 0)
-    public static float SELF_DAMAGE_FRACTION = 0.5f;
+    @ConfigValue(value = "learning.backfire_chance", comment = "Chance d'un retour de flamme : le sort est lancé sur le lanceur lui-même au lieu de partir. Quand il se produit, les autres malus ne se produisent pas. Impossible pour un sort qui vise déjà le lanceur.", min = 0, max = 1)
+    public static float BACKFIRE_CHANCE = 0.20f;
+    @ConfigValue(value = "learning.backfire_effect_fraction", comment = "Force du sort quand il se retourne contre le lanceur : dégâts, soin et durée des états (0,8 = 80 %).", min = 0)
+    public static float BACKFIRE_EFFECT_FRACTION = 0.8f;
     @ConfigValue(value = "learning.witness_radius", comment = "Distance en blocs à laquelle un sort lancé peut être vu, et donc débloqué.", min = 1)
     public static double WITNESS_RADIUS = 16.0;
     public static float successChance(float gauge) {
@@ -65,24 +66,23 @@ public final class SpellLearning {
                 : BASE_GAIN * (float) Math.pow(GAIN_FACTOR_PER_RANK_ABOVE_PLAYER, -gap);
         return seenOnly ? gain / SEEN_ONLY_GAIN_DIVISOR : gain;
     }
-    public record Debuffs(boolean doubledMana, boolean halvedEffect, boolean deviated, boolean selfDamage) {
+    public record Debuffs(boolean doubledMana, boolean halvedEffect, boolean deviated, boolean backfire) {
         public static final Debuffs NONE = new Debuffs(false, false, false, false);
-
         public boolean any() {
-            return doubledMana || halvedEffect || deviated || selfDamage;
+            return doubledMana || halvedEffect || deviated || backfire;
         }
         public String describe() {
             List<String> parts = new ArrayList<>();
             if (doubledMana) parts.add("mana doublé");
             if (halvedEffect) parts.add("effet réduit");
             if (deviated) parts.add("trajectoire déviée");
-            if (selfDamage) parts.add("retour de flamme");
+            if (backfire) parts.add("retour de flamme");
             return Chat.dim(String.join(", ", parts));
         }
     }
-    public static Debuffs rollDebuffs(RandomSource random, boolean damagingSpell) {
+    public static Debuffs rollDebuffs(RandomSource random, boolean canBackfire) {
         // Un retour de flamme exclut tous les autres malus.
-        if (damagingSpell && random.nextFloat() < SELF_DAMAGE_CHANCE) {
+        if (canBackfire && random.nextFloat() < BACKFIRE_CHANCE) {
             return new Debuffs(false, false, false, true);
         }
         return new Debuffs(
@@ -90,6 +90,23 @@ public final class SpellLearning {
                 random.nextFloat() < DEBUFF_CHANCE,
                 random.nextFloat() < DEBUFF_CHANCE,
                 false);
+    }
+    /** Un sort hybride exige le rang du sort dans chacune de ses écoles. */
+    public static boolean meetsRank(PlayerProgressionData data, SpellDefinition def) {
+        for (MagicSchool school : def.schools()) {
+            if (!data.getSchoolRank(school).isAtLeast(def.rank())) return false;
+        }
+        return true;
+    }
+
+    /** Rang qui règle la vitesse d'apprentissage : le plus bas des rangs du joueur dans les écoles du sort. */
+    public static MagicRank learningRank(PlayerProgressionData data, SpellDefinition def) {
+        MagicRank lowest = null;
+        for (MagicSchool school : def.schools()) {
+            MagicRank rank = data.getSchoolRank(school);
+            if (lowest == null || rank.ordinal() < lowest.ordinal()) lowest = rank;
+        }
+        return lowest;
     }
     /** Écarte la direction du sort de façon bien visible. */
     public static Vec3 deviate(Vec3 direction, RandomSource random) {
@@ -107,14 +124,12 @@ public final class SpellLearning {
         for (ServerPlayer witness : ((ServerLevel) caster.level()).players()) {
             if (witness == caster) continue;
             if (witness.distanceToSqr(caster) > WITNESS_RADIUS * WITNESS_RADIUS || !witness.hasLineOfSight(caster)) continue;
-
             PlayerProgressionData data = witness.getData(ModAttachments.PROGRESSION);
             if (!data.isManaAwakened() || data.isSpellUnlocked(def.id())) continue;
-            if (!data.getSchoolRank(def.school()).isAtLeast(def.rank())) continue;
-
+            if (!meetsRank(data, def)) continue;
             data.unlockSpell(def.id());
             data.setSpellSeenOnly(def.id(), true);
-            witness.sendSystemMessage(Component.literal("J'ai vu " + Chat.school(def.school()) + " : "
+            witness.sendSystemMessage(Component.literal("J'ai vu " + Chat.schools(def.schools()) + " : "
                     + Chat.good(def.id()) + ". Je pourrais " + Chat.good("apprendre") + " ce sort, mais sans sa formule ce sera "
                     + Chat.dim("long") + "."));
         }

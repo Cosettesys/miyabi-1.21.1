@@ -70,6 +70,7 @@ public class Miyabi {
         ModParticles.PARTICLE_TYPES.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
         ModAttributes.ATTRIBUTES.register(modEventBus);
+        ModEffects.EFFECTS.register(modEventBus);
 
         // Fichiers de configuration (config/miyabi) : créés au premier lancement, rechargeables avec /miyabi config reload
         MiyabiConfig.reload();

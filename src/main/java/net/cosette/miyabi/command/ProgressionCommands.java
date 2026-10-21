@@ -82,7 +82,21 @@ public final class ProgressionCommands {
                                 .then(Commands.argument("spell", StringArgumentType.word())
                                         .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(SpellRegistry.ids(), builder))
                                         .then(Commands.argument("seen", BoolArgumentType.bool())
-                                                .executes(ProgressionCommands::setSpellSeen)))));
+                                                .executes(ProgressionCommands::setSpellSeen)))))
+                .then(Commands.literal("techniquelearning")
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .then(Commands.argument("technique", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+                                                SwordTechniqueRegistry.all().stream().map(SwordTechniqueDefinition::id), builder))
+                                        .then(Commands.argument("value", FloatArgumentType.floatArg(-1f, 100f))
+                                                .executes(ProgressionCommands::setTechniqueLearning)))))
+                .then(Commands.literal("techniqueseen")
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .then(Commands.argument("technique", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+                                                SwordTechniqueRegistry.all().stream().map(SwordTechniqueDefinition::id), builder))
+                                        .then(Commands.argument("seen", BoolArgumentType.bool())
+                                                .executes(ProgressionCommands::setTechniqueSeen)))));
     }
     private static PlayerProgressionData data(ServerPlayer player) {
         return player.getData(ModAttachments.PROGRESSION);
@@ -133,6 +147,15 @@ public final class ProgressionCommands {
                 learning.append(Chat.dim(" (vu)"));
             }
         }
+        StringBuilder techLearning = new StringBuilder();
+        for (var entry : data.getAllTechniqueLearning().entrySet()) {
+            if (techLearning.length() > 0) techLearning.append(", ");
+            techLearning.append(Chat.dim(entry.getKey())).append("=")
+                    .append(entry.getValue() >= 100f ? Chat.good("apprise") : Chat.mana(String.format("%.0f%%", entry.getValue())));
+            if (entry.getValue() < 100f && data.isTechniqueSeenOnly(entry.getKey())) {
+                techLearning.append(Chat.dim(" (vue)"));
+            }
+        }
         return CommandUtil.info(ctx, Chat.title("Progression de " + player.getName().getString())
                 + "\n" + Chat.label("Mana éveillé") + " : " + Chat.bool(data.isManaAwakened())
                 + " | " + Chat.label("Battle aura éveillée") + " : " + Chat.bool(data.isBattleAuraAwakened())
@@ -142,6 +165,7 @@ public final class ProgressionCommands {
                 + "\n" + Chat.label("Styles") + " : " + styles
                 + "\n" + Chat.label("Sorts lancés") + " : " + (casts.length() == 0 ? Chat.dim("aucun") : casts)
                 + "\n" + Chat.label("Apprentissage") + " : " + (learning.length() == 0 ? Chat.dim("aucun sort débloqué") : learning)
+                + "\n" + Chat.label("Apprentissage techniques") + " : " + (techLearning.length() == 0 ? Chat.dim("aucune technique débloquée") : techLearning)
                 + "\n" + Chat.label("Techniques utilisées") + " : " + (uses.length() == 0 ? Chat.dim("aucune") : uses)
                 + "\n" + Chat.label("Compteurs d'aura") + " : " + counters);
     }
@@ -255,6 +279,9 @@ public final class ProgressionCommands {
         for (String id : SpellRegistry.ids()) {
             data(player).setSpellLearning(id, 100f);
         }
+        for (SwordTechniqueDefinition technique : SwordTechniqueRegistry.all()) {
+            data(player).setTechniqueLearning(technique.id(), 100f);
+        }
         return CommandUtil.success(ctx, "Tous les sorts sont appris pour " + player.getName().getString());
     }
     private static int setSpellSeen(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -266,5 +293,26 @@ public final class ProgressionCommands {
         }
         data(player).setSpellSeenOnly(spellId, seen);
         return CommandUtil.success(ctx, spellId + " de " + player.getName().getString() + " : " + (seen ? "appris en le voyant" : "appris en lisant"));
+    }
+    private static int setTechniqueLearning(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = CommandUtil.player(ctx);
+        String techniqueId = StringArgumentType.getString(ctx, "technique");
+        float value = FloatArgumentType.getFloat(ctx, "value");
+        if (SwordTechniqueRegistry.byId(techniqueId) == null) {
+            return CommandUtil.fail(ctx, "Technique inconnue : " + techniqueId);
+        }
+        data(player).setTechniqueLearning(techniqueId, value);
+        return CommandUtil.success(ctx, "Apprentissage de " + techniqueId + " pour " + player.getName().getString()
+                + " -> " + (value < 0 ? "verrouillé" : value + "%"));
+    }
+    private static int setTechniqueSeen(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = CommandUtil.player(ctx);
+        String techniqueId = StringArgumentType.getString(ctx, "technique");
+        boolean seen = BoolArgumentType.getBool(ctx, "seen");
+        if (SwordTechniqueRegistry.byId(techniqueId) == null) {
+            return CommandUtil.fail(ctx, "Technique inconnue : " + techniqueId);
+        }
+        data(player).setTechniqueSeenOnly(techniqueId, seen);
+        return CommandUtil.success(ctx, techniqueId + " de " + player.getName().getString() + " : " + (seen ? "apprise en la voyant" : "apprise en formation"));
     }
 }

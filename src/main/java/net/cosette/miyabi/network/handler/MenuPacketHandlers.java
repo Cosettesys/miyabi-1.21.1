@@ -1,5 +1,6 @@
 package net.cosette.miyabi.network.handler;
 
+import net.cosette.miyabi.progression.*;
 import net.cosette.miyabi.registry.ModAttachments;
 import net.cosette.miyabi.skills.battleaura.BattleAuraManager;
 import net.cosette.miyabi.skills.magic.effect.DamageEffect;
@@ -18,10 +19,6 @@ import net.cosette.miyabi.skills.cast.SpellSlotsData;
 import net.cosette.miyabi.skills.magic.MagicSchool;
 import net.cosette.miyabi.skills.magic.SpellDefinition;
 import net.cosette.miyabi.skills.SpellRegistry;
-import net.cosette.miyabi.progression.MagicRank;
-import net.cosette.miyabi.progression.MeditationData;
-import net.cosette.miyabi.progression.PlayerProgressionData;
-import net.cosette.miyabi.progression.SwordStyle;
 import net.cosette.miyabi.skills.swordtechniques.SwordTechniqueDefinition;
 import net.cosette.miyabi.skills.SwordTechniqueRegistry;
 import java.util.Comparator;
@@ -55,6 +52,8 @@ public final class MenuPacketHandlers {
             if (!player.getData(ModAttachments.PROGRESSION).isManaAwakened()) return;
             SpellDefinition spell = SpellRegistry.byId(payload.spellId());
             if (spell != null && !player.getData(ModAttachments.PROGRESSION).isSpellUnlocked(spell.id())) return;
+            SwordTechniqueDefinition technique = SwordTechniqueRegistry.byId(payload.spellId());
+            if (technique != null && !player.getData(ModAttachments.PROGRESSION).isTechniqueUnlocked(technique.id())) return;
             if (player.getData(ModAttachments.CAST).isCasting()
                     || player.getData(ModAttachments.MEDITATION).isMeditating()) {
                 player.sendSystemMessage(Component.literal(
@@ -99,22 +98,30 @@ public final class MenuPacketHandlers {
             } else if (def.effect() instanceof HealEffect healEffect) {
                 heal = healEffect.baseHeal();
             }
+            int casts = progression.getSpellCasts(def.id());
             spells.add(new MenuDataPayload.SpellEntry(
-                    def.id(), def.school().name(), def.rank().name(),
-                    progression.getSpellCasts(def.id()), CastManager.effectiveManaCost(player, def),
+                    def.id(), def.school().name(), def.secondarySchool() == null ? "" : def.secondarySchool().name(),
+                    def.rank().name(), casts, CastManager.effectiveManaCost(player, def),
                     progression.isSpellLearned(def.id()),
-                    damage, heal, CastManager.castSeconds(player, def), def.maxIntensityPercent(), physical));
+                    damage, heal, CastManager.castSeconds(player, def), def.maxIntensityPercent(), physical,
+                    Math.min(1f, casts / (float) MasteryManager.SPELL_MASTERY_CASTS),
+                    progression.getSpellLearning(def.id()) / 100f,
+                    def.description(), def.incantation()));
         }
         List<SwordTechniqueDefinition> techs = new ArrayList<>(SwordTechniqueRegistry.all());
         techs.sort(Comparator.comparingInt((SwordTechniqueDefinition t) -> t.rank().ordinal())
                 .thenComparing(SwordTechniqueDefinition::id));
         List<MenuDataPayload.TechniqueEntry> techniques = new ArrayList<>();
         for (SwordTechniqueDefinition t : techs) {
+            if (!progression.isTechniqueUnlocked(t.id())) continue; // technique pas encore débloquée : invisible
             float damage = t.baseDamage() * t.physicalType().getDamageMultiplier()
                     * progression.getStyleRank(t.style()).getDamageMultiplier();
             String weapon = t.requiredWeapon() == null ? "" : t.requiredWeapon().location().toString();
             techniques.add(new MenuDataPayload.TechniqueEntry(t.id(), t.style().name(), t.rank().name(),
-                    damage, TechniqueManager.effectiveCooldownTicks(player, t) / 20f, t.reach(), t.physicalType().name(), weapon));
+                    progression.isTechniqueLearned(t.id()),
+                    damage, TechniqueManager.effectiveCooldownTicks(player, t) / 20f, t.reach(), t.physicalType().name(), weapon,
+                    Math.min(1f, progression.getTechniqueUses(t.id()) / (float) MasteryManager.TECHNIQUE_MASTERY_USES),
+                    progression.getTechniqueLearning(t.id()) / 100f));
         }
         SpellSlotsData slotData = player.getData(ModAttachments.SPELL_SLOTS);
         List<String> slots = new ArrayList<>();

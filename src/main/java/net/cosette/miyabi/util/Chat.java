@@ -5,6 +5,8 @@ import net.cosette.miyabi.progression.MagicRank;
 import net.cosette.miyabi.progression.SwordStyle;
 import net.cosette.miyabi.skills.magic.MagicSchool;
 
+import java.util.List;
+
 /**
  * Aides pour colorer quelques mots importants dans les messages du chat (codes de formatage Minecraft).
  * Exemple : "Je sens mon corps " + Chat.aura("plus fort") + " maintenant."
@@ -36,6 +38,15 @@ public final class Chat {
             case HEALING -> ChatFormatting.GREEN;
         };
         return c(color, school.name());
+    }
+    /** Une école, ou deux séparées par + pour un sort hybride. */
+    public static String schools(List<MagicSchool> schools) {
+        StringBuilder out = new StringBuilder();
+        for (MagicSchool school : schools) {
+            if (out.length() > 0) out.append(dim(" + "));
+            out.append(school(school));
+        }
+        return out.toString();
     }
     public static String style(SwordStyle style) {
         ChatFormatting color = switch (style) {
