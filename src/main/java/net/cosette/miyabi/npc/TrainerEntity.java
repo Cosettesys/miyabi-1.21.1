@@ -5,6 +5,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
@@ -25,7 +27,14 @@ public class TrainerEntity extends PathfinderMob {
     public TrainerEntity(EntityType<? extends TrainerEntity> type, Level level) {
         super(type, level);
         setPersistenceRequired();
-        setInvulnerable(true);
+    }
+    /**
+     * Insensible à tout, même aux coups d'un joueur en créatif. Seuls /kill et la chute hors du monde
+     * peuvent le retirer (pour le supprimer : /kill @e[type=miyabi:trainer]).
+     */
+    @Override
+    public boolean isInvulnerableTo(DamageSource source) {
+        return !(source.is(DamageTypes.GENERIC_KILL) || source.is(DamageTypes.FELL_OUT_OF_WORLD));
     }
     public static AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes()

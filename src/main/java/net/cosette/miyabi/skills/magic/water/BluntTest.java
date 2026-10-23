@@ -14,6 +14,6 @@ public final class BluntTest {
     public static final SpellDefinition DEFINITION = new SpellDefinition(
             "blunt_test", MagicSchool.WATER, MagicRank.INTERMEDIATE, SpellShape.SPHERE, SpellCategory.PROJECTILE,
             new DamageEffect(3.0f, PhysicalDamageType.BLUNT),
-            1.5f, 0.35f, 40, 10f, 300f
+            1.5f, 0.35f, 40, 10f, 300f, 300
     );
 }

@@ -10,8 +10,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.cosette.miyabi.registry.ModComponents;
-import net.cosette.miyabi.registry.ModItems;
 import net.cosette.miyabi.skills.SpellRegistry;
+import net.cosette.miyabi.skills.learning.LearnMethod;
 import net.cosette.miyabi.skills.learning.SpellLearning;
 import net.cosette.miyabi.skills.magic.SpellDefinition;
 import net.cosette.miyabi.util.Chat;
@@ -19,16 +19,19 @@ import net.cosette.miyabi.util.Chat;
 import java.util.List;
 
 /**
- * Parchemin qui enseigne un sort : le composant miyabi:taught_spell contient l'id du sort.
+ * Objet qui enseigne un sort : parchemin (SCROLL) ou grimoire (GRIMOIRE). Le composant miyabi:taught_spell contient
+ * l'id du sort. Un objet n'enseigne que les sorts dont le learnable_by (config du sort) correspond à son type.
  * Le lire donne la formule exacte du sort : il devient apprenable à vitesse normale (au lieu de la vitesse réduite d'un sort seulement vu).
  */
-public class SpellScrollItem extends Item {
-    public SpellScrollItem(Properties properties) {
+public class SpellTeachingItem extends Item {
+    private final LearnMethod method;
+    public SpellTeachingItem(Properties properties, LearnMethod method) {
         super(properties);
+        this.method = method;
     }
-    /** Un parchemin pour ce sort. */
-    public static ItemStack create(String spellId) {
-        ItemStack stack = new ItemStack(ModItems.SPELL_SCROLL.get());
+    /** Un exemplaire de cet objet pour ce sort. */
+    public static ItemStack create(Item item, String spellId) {
+        ItemStack stack = new ItemStack(item);
         stack.set(ModComponents.TAUGHT_SPELL.get(), spellId);
         return stack;
     }
@@ -41,10 +44,10 @@ public class SpellScrollItem extends Item {
         String spellId = stack.get(ModComponents.TAUGHT_SPELL.get());
         SpellDefinition spell = spellId == null ? null : SpellRegistry.byId(spellId);
         if (spell == null) {
-            serverPlayer.sendSystemMessage(Component.literal("Ce parchemin est " + Chat.bad("illisible") + "."));
+            serverPlayer.sendSystemMessage(Component.literal("Ce " + method.itemName() + " est " + Chat.bad("illisible") + "."));
             return InteractionResultHolder.fail(stack);
         }
-        if (SpellLearning.readScroll(serverPlayer, spell) && !player.getAbilities().instabuild) {
+        if (SpellLearning.readBook(serverPlayer, spell, method) && !player.getAbilities().instabuild) {
             stack.shrink(1);
         }
         return InteractionResultHolder.success(stack);
@@ -54,7 +57,7 @@ public class SpellScrollItem extends Item {
         String spellId = stack.get(ModComponents.TAUGHT_SPELL.get());
         SpellDefinition spell = spellId == null ? null : SpellRegistry.byId(spellId);
         if (spell == null) {
-            tooltip.add(Component.literal("Parchemin vierge ou illisible"));
+            tooltip.add(Component.literal("Vierge ou illisible"));
             return;
         }
         tooltip.add(Component.literal(Chat.schools(spell.schools()) + " : " + spell.id()));

@@ -10,7 +10,7 @@ import net.cosette.miyabi.Miyabi;
  * Serveur -> client : début, resynchronisation ou fin de l'affichage de l'incantation.
  * Un texte vide arrête l'affichage. progressTicks : avancement de la charge au moment de l'envoi (après une interruption, il recule).
  */
-public record IncantationPayload(String text, int durationTicks, int progressTicks) implements CustomPacketPayload {
+public record IncantationPayload(String text, int durationTicks, int progressTicks, String schools) implements CustomPacketPayload {
     public static final Type<IncantationPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Miyabi.MODID, "incantation"));
     public static final StreamCodec<io.netty.buffer.ByteBuf, IncantationPayload> STREAM_CODEC =
@@ -18,6 +18,7 @@ public record IncantationPayload(String text, int durationTicks, int progressTic
                     ByteBufCodecs.STRING_UTF8, IncantationPayload::text,
                     ByteBufCodecs.VAR_INT, IncantationPayload::durationTicks,
                     ByteBufCodecs.VAR_INT, IncantationPayload::progressTicks,
+                    ByteBufCodecs.STRING_UTF8, IncantationPayload::schools,
                     IncantationPayload::new
             );
     @Override

@@ -3,6 +3,7 @@ package net.cosette.miyabi.config;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import net.cosette.miyabi.progression.MagicRank;
 import net.cosette.miyabi.skills.damage.PhysicalDamageType;
+import net.cosette.miyabi.skills.learning.LearnMethod;
 import net.cosette.miyabi.skills.magic.SpellDefinition;
 import net.cosette.miyabi.skills.magic.effect.DamageEffect;
 import net.cosette.miyabi.skills.magic.effect.HealEffect;
@@ -29,6 +30,10 @@ public final class SpellConfig {
                 "Temps d'incantation de base en secondes, avant maîtrise, silent cast et bâton.", 0.05, 3600, report);
         float maxIntensity = ConfigIO.getFloat(config, p + "max_intensity_percent", base.maxIntensityPercent(),
                 "Intensité maximale qu'on peut charger, en pourcentage (300 = trois fois le coût et l'effet).", 100, 100000, report);
+        int masteryCasts = ConfigIO.getInt(config, p + "mastery_casts", base.masteryCasts(),
+                "Nombre de lancers pour maîtriser ce sort (coût et temps d'incantation au minimum). Chaque sort a le sien : un sort puissant en demande bien plus.", 1, 1e7, report);
+        LearnMethod learnableBy = ConfigIO.getEnum(config, p + "learnable_by", base.learnableBy(),
+                "Objet qui enseigne ce sort : NONE (aucun), SCROLL (parchemin) ou GRIMOIRE (grimoire, pour les sorts les plus puissants).\nSe débloquer en voyant le sort lancé, ou via un entraîneur, reste possible dans tous les cas.", report);
         SpellEffect effect = base.effect();
         if (effect instanceof DamageEffect damage) {
             float value = ConfigIO.getFloat(config, p + "damage", damage.baseDamage(),
@@ -53,6 +58,6 @@ public final class SpellConfig {
                 "Incantation (la formule récitée) affichée dans le menu. Peut être longue pour un sort avancé. Laisser vide pour ne rien afficher.", report);
         return new SpellDefinition(base.id(), base.school(), base.secondarySchool(), base.element(), rank, base.shape(),
                 base.category(), effect, base.baseSpeed(), base.baseSize(), Math.max(1, Math.round(castSeconds * 20f)),
-                manaCost, maxIntensity, description, incantation);
+                manaCost, maxIntensity, description, incantation, masteryCasts, learnableBy);
     }
 }

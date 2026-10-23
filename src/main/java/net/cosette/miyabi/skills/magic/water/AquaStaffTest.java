@@ -1,6 +1,7 @@
 package net.cosette.miyabi.skills.magic.water;
 
 import net.cosette.miyabi.progression.MagicRank;
+import net.cosette.miyabi.skills.learning.LearnMethod;
 import net.cosette.miyabi.skills.magic.MagicSchool;
 import net.cosette.miyabi.skills.magic.SpellCategory;
 import net.cosette.miyabi.skills.magic.SpellDefinition;
@@ -18,6 +19,8 @@ public final class AquaStaffTest {
             "Une immense vague d'eau, impossible à lancer sans bâton.",
             "Ô eau qui sommeilles au fond des océans, toi qui as sculpté les falaises et nourri les rivières, entends mon appel. "
                     + "Que les marées se lèvent, que les courants s'unissent et que ta fureur, longtemps contenue, "
-                    + "se déchaîne sur ceux qui se dressent devant moi. Je te le demande par le bâton que je tiens : déferle !"
+                    + "se déchaîne sur ceux qui se dressent devant moi. Je te le demande par le bâton que je tiens : déferle !",
+            250,
+            LearnMethod.GRIMOIRE
     );
 }

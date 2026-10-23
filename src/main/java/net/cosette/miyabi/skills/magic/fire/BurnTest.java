@@ -2,6 +2,7 @@ package net.cosette.miyabi.skills.magic.fire;
 
 import net.cosette.miyabi.progression.MagicRank;
 import net.cosette.miyabi.skills.damage.PhysicalDamageType;
+import net.cosette.miyabi.skills.learning.LearnMethod;
 import net.cosette.miyabi.skills.magic.MagicSchool;
 import net.cosette.miyabi.skills.magic.SpellCategory;
 import net.cosette.miyabi.skills.magic.SpellDefinition;
@@ -17,6 +18,8 @@ public final class BurnTest {
             new DamageEffect(2.0f, PhysicalDamageType.NONE, ElementStatus.BURNED, 200),
             1.5f, 0.35f, 40, 10f, 300f,
             "Une flamme tenace qui laisse sa cible brûlée.",
-            "Flamme, accroche-toi à ma cible et ne la lâche plus."
+            "Flamme, accroche-toi à ma cible et ne la lâche plus.",
+            200,
+            LearnMethod.SCROLL
     );
 }

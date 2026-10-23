@@ -14,6 +14,6 @@ public final class PiercingTest {
     public static final SpellDefinition DEFINITION = new SpellDefinition(
             "piercing_test", MagicSchool.WIND, MagicRank.BEGINNER, SpellShape.SPHERE, SpellCategory.PROJECTILE,
             new DamageEffect(3.0f, PhysicalDamageType.PIERCING),
-            1.5f, 0.35f, 40, 10f, 300f
+            1.5f, 0.35f, 40, 10f, 300f, 200
     );
 }

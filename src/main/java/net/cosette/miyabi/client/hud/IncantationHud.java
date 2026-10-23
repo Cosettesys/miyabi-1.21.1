@@ -10,26 +10,65 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.cosette.miyabi.Miyabi;
+import net.cosette.miyabi.config.ClientSettings;
+import net.cosette.miyabi.skills.magic.MagicSchool;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Affiche l'incantation du sort pendant sa charge : les mots apparaissent un par un en haut au milieu de l'écran,
  * lignes centrées, avec retour à la ligne. Le premier mot apparaît au début de l'incantation et le dernier à sa fin,
- * donc le rythme dépend du nombre de mots et de la durée d'incantation.
+ * donc le rythme dépend du nombre de mots et de la durée d'incantation. Une fois complète, elle s'éclaircit.
+ * La taille, la position et les temps se règlent dans miyabi-client.toml ; les couleurs par école, ici.
  */
 @EventBusSubscriber(modid = Miyabi.MODID, value = Dist.CLIENT)
 public final class IncantationHud {
     private IncantationHud() {}
     private static final ResourceLocation LAYER_ID = ResourceLocation.fromNamespaceAndPath(Miyabi.MODID, "incantation");
-    private static final float SCALE = 1.6f;            // taille du texte
-    private static final int TOP = 26;                   // distance du haut de l'écran, en pixels
-    private static final float MAX_WIDTH_FRACTION = 0.7f; // largeur maximale du texte, en part de l'écran
+    // ---- COULEURS PAR ÉCOLE : à ajuster ici pour les tests (format 0xRRGGBB) ----
+    /** Couleur quand l'école n'est pas connue. */
+    private static final int DEFAULT_COLOR = 0x3AA8C7;
+    private static final Map<MagicSchool, Integer> SCHOOL_COLORS = new EnumMap<>(MagicSchool.class);
+    static {
+        SCHOOL_COLORS.put(MagicSchool.FIRE, 0xFF6A2B);
+        SCHOOL_COLORS.put(MagicSchool.WATER, 0x3AA8C7);
+        SCHOOL_COLORS.put(MagicSchool.EARTH, 0xC9A24B);
+        SCHOOL_COLORS.put(MagicSchool.WIND, 0xB6F0C8);
+        SCHOOL_COLORS.put(MagicSchool.GRAVITY, 0xA45FE8);
+        SCHOOL_COLORS.put(MagicSchool.SUMMONING, 0xE45FC9);
+        SCHOOL_COLORS.put(MagicSchool.BARRIER, 0x6C8CF0);
+        SCHOOL_COLORS.put(MagicSchool.HEALING, 0x5FE08E);
+    }
     private static final int LINE_GAP = 3;
-    private static final float WORD_FADE_IN_TICKS = 6f;  // apparition progressive de chaque mot
-    private static final float FADE_OUT_TICKS = 12f;     // disparition à la fin de l'incantation
-    private static final int COLOR = 0x3AA8C7;
+    /** Couleur d'un sort d'après ses écoles (séparées par des virgules) ; un sort hybride mélange les couleurs de ses écoles. */
+    public static int colorFor(String schoolsCsv) {
+        int r = 0;
+        int g = 0;
+        int b = 0;
+        int count = 0;
+        for (String name : schoolsCsv.split(",")) {
+            try {
+                int color = SCHOOL_COLORS.getOrDefault(MagicSchool.valueOf(name.trim()), DEFAULT_COLOR);
+                r += (color >> 16) & 0xFF;
+                g += (color >> 8) & 0xFF;
+                b += color & 0xFF;
+                count++;
+            } catch (IllegalArgumentException ignored) {
+                // école inconnue : ignorée
+            }
+        }
+        if (count == 0) return DEFAULT_COLOR;
+        return ((r / count) << 16) | ((g / count) << 8) | (b / count);
+    }
+    private static int lerpColor(int from, int to, float t) {
+        int r = (int) (((from >> 16) & 0xFF) + (((to >> 16) & 0xFF) - ((from >> 16) & 0xFF)) * t);
+        int g = (int) (((from >> 8) & 0xFF) + (((to >> 8) & 0xFF) - ((from >> 8) & 0xFF)) * t);
+        int b = (int) ((from & 0xFF) + ((to & 0xFF) - (from & 0xFF)) * t);
+        return (r << 16) | (g << 8) | b;
+    }
     private record Word(String text, int line, int x) {}
     // Mise en page calculée une fois pour un texte et une largeur donnés : les mots ne bougent jamais en apparaissant
     private static String cachedText = null;
@@ -65,6 +104,7 @@ public final class IncantationHud {
     private static void render(GuiGraphics g, DeltaTracker deltaTracker) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null || mc.options.hideGui) return;
+        if (!ClientSettings.SHOW_INCANTATION_ON_SCREEN) return;
         double now = mc.level.getGameTime() + deltaTracker.getGameTimeDeltaPartialTick(false);
         // Un joueur mort ne récite plus : on n'affiche pas l'ancienne incantation à sa réapparition
         if (mc.player.isDeadOrDying()) {
@@ -72,30 +112,35 @@ public final class IncantationHud {
         }
         float fade = 1f;
         if (!ClientIncantationState.isActive()) {
-            fade = 1f - (float) ((now - ClientIncantationState.getStoppedAt()) / FADE_OUT_TICKS);
+            fade = 1f - (float) ((now - ClientIncantationState.getStoppedAt()) / ClientSettings.INCANTATION_FADE_OUT_TICKS);
             if (fade <= 0f || ClientIncantationState.getText().isEmpty()) return;
         }
-        int maxWidth = (int) (mc.getWindow().getGuiScaledWidth() * MAX_WIDTH_FRACTION / SCALE);
+        float scale = ClientSettings.INCANTATION_SCALE;
+        int maxWidth = (int) (mc.getWindow().getGuiScaledWidth() * ClientSettings.INCANTATION_MAX_WIDTH_FRACTION / scale);
         layout(mc.font, ClientIncantationState.getText(), maxWidth);
         if (words.isEmpty()) return;
         int duration = ClientIncantationState.getDurationTicks();
         double elapsed = now - ClientIncantationState.getStartGameTime();
         int count = words.size();
+        // Une fois tous les mots écrits, la couleur s'éclaircit vers le blanc
+        float glow = (float) Math.max(0.0, Math.min(1.0, (elapsed - duration) / ClientSettings.INCANTATION_COMPLETE_GLOW_TICKS));
+        int rgb = lerpColor(ClientIncantationState.getColor(), 0xFFFFFF, glow * ClientSettings.INCANTATION_COMPLETE_BRIGHTNESS);
         g.pose().pushPose();
-        g.pose().translate(mc.getWindow().getGuiScaledWidth() / 2f, TOP, 0f);
-        g.pose().scale(SCALE, SCALE, 1f);
+        g.pose().translate(mc.getWindow().getGuiScaledWidth() / 2f, ClientSettings.INCANTATION_TOP, 0f);
+        g.pose().scale(scale, scale, 1f);
         for (int i = 0; i < count; i++) {
             // Premier mot au début, dernier mot à la fin de l'incantation (un mot seul apparaît à la fin)
             double appearsAt = count == 1 ? duration : duration * (i / (double) (count - 1));
             float age = (float) (elapsed - appearsAt);
             if (age < 0f) continue;
-            float alpha = Math.min(1f, age / WORD_FADE_IN_TICKS) * fade;
+            float fadeIn = ClientSettings.INCANTATION_WORD_FADE_IN_TICKS;
+            float alpha = (fadeIn <= 0f ? 1f : Math.min(1f, age / fadeIn)) * fade;
             int a = (int) (alpha * 255f);
             if (a < 4) continue; // en dessous, le jeu traite la couleur comme opaque
             Word word = words.get(i);
             int x = -lineWidths.get(word.line()) / 2 + word.x();
             int y = word.line() * (mc.font.lineHeight + LINE_GAP);
-            g.drawString(mc.font, word.text(), x, y, (a << 24) | COLOR, true);
+            g.drawString(mc.font, word.text(), x, y, (a << 24) | rgb, true);
         }
         g.pose().popPose();
     }

@@ -2,12 +2,15 @@ package net.cosette.miyabi.command;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import net.cosette.miyabi.config.ClientConfig;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.cosette.miyabi.config.ConfigReport;
 import net.cosette.miyabi.config.MiyabiConfig;
 import net.cosette.miyabi.util.Chat;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.loading.FMLEnvironment;
 
 /** Branche /miyabi config ... */
 public final class ConfigCommands {
@@ -20,6 +23,10 @@ public final class ConfigCommands {
     }
     private static int reload(CommandContext<CommandSourceStack> ctx) {
         ConfigReport report = MiyabiConfig.reload();
+        // En solo, le client et le serveur partagent la machine : on recharge aussi le fichier client
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            ClientConfig.reload();
+        }
         StringBuilder message = new StringBuilder(Chat.title("Configuration rechargée"))
                 .append(" : ").append(Chat.good(report.files())).append(" fichier(s)");
         if (report.added() > 0) {

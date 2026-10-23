@@ -2,6 +2,7 @@ package net.cosette.miyabi.skills.magic.hybrid;
 
 import net.cosette.miyabi.progression.MagicRank;
 import net.cosette.miyabi.skills.damage.PhysicalDamageType;
+import net.cosette.miyabi.skills.learning.LearnMethod;
 import net.cosette.miyabi.skills.magic.DamageElement;
 import net.cosette.miyabi.skills.magic.MagicSchool;
 import net.cosette.miyabi.skills.magic.SpellCategory;
@@ -18,6 +19,8 @@ public final class LightningTest {
             new DamageEffect(4.0f, PhysicalDamageType.NONE),
             1.5f, 0.35f, 40, 12f, 300f,
             "Un éclair né de l'union du vent et de l'eau. Frappe plus fort une cible mouillée.",
-            "Vent qui gronde, eau qui ruisselle, unissez-vous et frappez d'un seul éclat."
+            "Vent qui gronde, eau qui ruisselle, unissez-vous et frappez d'un seul éclat.",
+            600,
+            LearnMethod.SCROLL
     );
 }

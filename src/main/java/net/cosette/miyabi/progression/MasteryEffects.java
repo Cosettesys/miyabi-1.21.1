@@ -10,20 +10,17 @@ public final class MasteryEffects {
     public static float MAX_MANA_COST_REDUCTION = 0.5f;
     @ConfigValue(value = "mastery.max_cast_time_reduction", comment = "Réduction maximale du temps d'incantation d'un sort maîtrisé (0,2 = 20 % plus rapide).", min = 0, max = 0.95)
     public static float MAX_CAST_TIME_REDUCTION = 0.2f;
-    /** Nombre de paliers atteints (0 à 10) pour un sort. */
-    public static int masterySteps(int casts) {
-        return masterySteps(casts, MasteryManager.SPELL_MASTERY_CASTS);
-    }
     /** Nombre de paliers atteints (0 à 10) : count utilisations sur masteryCount nécessaires pour maîtriser. */
     public static int masterySteps(int count, int masteryCount) {
         if (count <= 0) return 0;
         return Math.min(STEPS, (int) ((long) count * STEPS / masteryCount));
     }
-    public static float manaCostMultiplier(int casts) {
-        return 1f - MAX_MANA_COST_REDUCTION * masterySteps(casts) / STEPS;
+    /** casts : lancers du sort ; castsToMaster : lancers nécessaires pour le maîtriser (propre à chaque sort). */
+    public static float manaCostMultiplier(int casts, int castsToMaster) {
+        return 1f - MAX_MANA_COST_REDUCTION * masterySteps(casts, castsToMaster) / STEPS;
     }
-    public static float castTimeMultiplier(int casts) {
-        return 1f - MAX_CAST_TIME_REDUCTION * masterySteps(casts) / STEPS;
+    public static float castTimeMultiplier(int casts, int castsToMaster) {
+        return 1f - MAX_CAST_TIME_REDUCTION * masterySteps(casts, castsToMaster) / STEPS;
     }
     /** Recharge d'une technique : de baseTicks (non maîtrisée) à masteredTicks (maîtrisée), par paliers. */
     public static int techniqueCooldownTicks(int baseTicks, int masteredTicks, int uses) {

@@ -112,7 +112,16 @@ public final class SpellLearning {
      * Lire un parchemin : le sort est débloqué avec sa formule exacte (apprentissage à vitesse normale).
      * @return true si le parchemin doit être consommé
      */
-    public static boolean readScroll(ServerPlayer player, SpellDefinition def) {
+    /**
+     * Lire un parchemin ou un grimoire : le sort est débloqué avec sa formule exacte (apprentissage à vitesse normale).
+     * L'objet doit correspondre au learnable_by du sort.
+     * @return true si l'objet doit être consommé
+     */
+    public static boolean readBook(ServerPlayer player, SpellDefinition def, LearnMethod method) {
+        if (def.learnableBy() != method) {
+            player.sendSystemMessage(Component.literal("Ce sort ne s'apprend pas dans un " + Chat.bad(method.itemName()) + "."));
+            return false;
+        }
         PlayerProgressionData data = player.getData(ModAttachments.PROGRESSION);
         if (!data.isManaAwakened()) {
             player.sendSystemMessage(Component.literal("Ces lignes ne me disent rien : mon " + Chat.mana("mana") + " n'est " + Chat.bad("pas éveillé") + "."));

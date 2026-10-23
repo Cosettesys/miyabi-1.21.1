@@ -2,6 +2,7 @@ package net.cosette.miyabi.skills.magic.water;
 
 import net.cosette.miyabi.progression.MagicRank;
 import net.cosette.miyabi.skills.damage.PhysicalDamageType;
+import net.cosette.miyabi.skills.learning.LearnMethod;
 import net.cosette.miyabi.skills.magic.MagicSchool;
 import net.cosette.miyabi.skills.magic.SpellCategory;
 import net.cosette.miyabi.skills.magic.SpellDefinition;
@@ -17,6 +18,8 @@ public final class WetTest {
             new DamageEffect(2.0f, PhysicalDamageType.NONE, ElementStatus.WET, 200),
             1.5f, 0.35f, 40, 10f, 300f,
             "Une gerbe d'eau qui trempe sa cible.",
-            "Eau, enveloppe ma cible et ne laisse rien de sec."
+            "Eau, enveloppe ma cible et ne laisse rien de sec.",
+            200,
+            LearnMethod.SCROLL
     );
 }

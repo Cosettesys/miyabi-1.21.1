@@ -1,6 +1,7 @@
 package net.cosette.miyabi.progression;
 
 public enum MagicRank {
+    // masteryToNext, damageMultiplier
     BEGINNER(20, 1.00f),
     INTERMEDIATE(50, 1.15f),
     ADVANCED(100, 1.30f),

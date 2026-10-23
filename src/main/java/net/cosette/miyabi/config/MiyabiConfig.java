@@ -111,6 +111,7 @@ public final class MiyabiConfig {
                     "Points de maîtrise pour passer au rang suivant (0 pour le rang maximal).", 0, 1e9, report);
             float damage = ConfigIO.getFloat(config, p + "damage_multiplier", rank.getDefaultDamageMultiplier(),
                     "Multiplicateur de dégâts des sorts de l'école à ce rang.", 0, 1000, report);
+            config.remove(p + "mastery_casts_multiplier"); // ancienne clé : la maîtrise est désormais propre à chaque sort
             rank.configure(toNext, damage);
         }
     }

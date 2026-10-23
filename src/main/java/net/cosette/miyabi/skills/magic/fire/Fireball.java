@@ -1,6 +1,7 @@
 package net.cosette.miyabi.skills.magic.fire;
 
 import net.cosette.miyabi.progression.MagicRank;
+import net.cosette.miyabi.skills.learning.LearnMethod;
 import net.cosette.miyabi.skills.magic.MagicSchool;
 import net.cosette.miyabi.skills.magic.SpellCategory;
 import net.cosette.miyabi.skills.magic.SpellDefinition;
@@ -15,6 +16,7 @@ public final class Fireball {
             new DamageEffect(3.0f),
             1.5f, 0.35f, 40, 10f, 300f,
             "Une sphère de feu lancée devant soi.",
-            "Ô flamme qui dévore, rassemble-toi en sphère et frappe ce que je vise."
+            "Ô flamme qui dévore, rassemble-toi en sphère et frappe ce que je vise.",
+            200, LearnMethod.SCROLL
     );
 }

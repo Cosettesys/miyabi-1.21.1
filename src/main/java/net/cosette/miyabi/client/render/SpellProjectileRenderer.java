@@ -23,7 +23,7 @@ public class SpellProjectileRenderer extends EntityRenderer<SpellProjectile> {
         super(context);
         Visual fireball = new Visual(
                 new FireballSmallModel<>(context.bakeLayer(FireballSmallModel.LAYER_LOCATION)),
-                ResourceLocation.fromNamespaceAndPath(Miyabi.MODID, "textures/entity/fireball_small.png")
+                ResourceLocation.fromNamespaceAndPath(Miyabi.MODID, "textures/entity/fireball.png")
         );
         visuals.put("fireball", fireball);
         fallback = fireball;
@@ -43,6 +43,7 @@ public class SpellProjectileRenderer extends EntityRenderer<SpellProjectile> {
         poseStack.mulPose(Axis.XP.rotationDegrees(entity.getViewXRot(partialTicks)));
         poseStack.scale(-1.0F, -1.0F, 1.0F);
         poseStack.translate(0.0, -1.25, 0.0);
+        visual.model().setupAnim(entity, 0.0F, 0.0F, entity.tickCount + partialTicks, 0.0F, 0.0F);
         var vertexConsumer = buffer.getBuffer(visual.model().renderType(visual.texture()));
         visual.model().renderToBuffer(poseStack, vertexConsumer, packedLight, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
         poseStack.popPose();

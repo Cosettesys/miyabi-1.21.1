@@ -22,7 +22,7 @@ public final class WaterTestSpells {
                     "water_test_" + i, MagicSchool.WATER, ranks[(i - 1) % ranks.length],
                     SpellShape.SPHERE, SpellCategory.PROJECTILE,
                     new DamageEffect(3.0f),
-                    1.5f, 0.35f, 40, 10f, 300f));
+                    1.5f, 0.35f, 40, 10f, 300f, 200));
         }
         return list;
     }

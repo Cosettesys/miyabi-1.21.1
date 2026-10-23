@@ -25,10 +25,11 @@ public final class MasteryManager {
         PlayerProgressionData data = player.getData(ModAttachments.PROGRESSION);
         // Maîtrise du sort lui-même : compte tous les lancers, quel que soit le rang
         int casts = data.incrementSpellCasts(def.id());
-        if (MasteryEffects.masterySteps(casts) > MasteryEffects.masterySteps(casts - 1)) {
+        int castsToMaster = def.masteryCastsRequired(); // propre à chaque sort
+        if (MasteryEffects.masterySteps(casts, castsToMaster) > MasteryEffects.masterySteps(casts - 1, castsToMaster)) {
             player.sendSystemMessage(Component.literal("Je me sens plus à l'aise avec " + Chat.schools(def.schools()) + " : " + Chat.good(def.id()) + "."));
         }
-        if (casts == SPELL_MASTERY_CASTS) {
+        if (casts == castsToMaster) {
             player.sendSystemMessage(Component.literal("Je " + Chat.good("maîtrise") + " désormais " + def.id() + "."));
         }
         // Maîtrise de rang : pour chaque école du sort où il est du rang actuel du joueur (un sort hybride fait progresser les deux)

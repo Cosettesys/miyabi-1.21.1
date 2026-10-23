@@ -42,7 +42,7 @@ public final class CastManager {
     /** Coût de base du sort, réduit par la maîtrise du joueur sur ce sort. */
     public static float effectiveManaCost(ServerPlayer player, SpellDefinition def) {
         int casts = player.getData(ModAttachments.PROGRESSION).getSpellCasts(def.id());
-        return def.manaCost() * MasteryEffects.manaCostMultiplier(casts) * StaffBonuses.costMultiplier(player, def.schools());
+        return def.manaCost() * MasteryEffects.manaCostMultiplier(casts, def.masteryCastsRequired()) * StaffBonuses.costMultiplier(player, def.schools());
     }
     /** Sort actuellement assigné à ce slot pour ce joueur, ou null si le slot est vide. */
     public static SpellDefinition spellInSlot(ServerPlayer player, int slot) {
@@ -54,7 +54,7 @@ public final class CastManager {
         float base = (def != null) ? def.baseCastDurationTicks() : SpellSlots.durationTicks(slot);
         if (def != null) {
             int casts = player.getData(ModAttachments.PROGRESSION).getSpellCasts(def.id());
-            base *= MasteryEffects.castTimeMultiplier(casts);
+            base *= MasteryEffects.castTimeMultiplier(casts, def.masteryCastsRequired());
         }
         if (silent) {
             base *= (1f - SILENT_CAST_SPEED_BONUS_PERCENT / 100f);
@@ -66,7 +66,7 @@ public final class CastManager {
     /** Temps d'incantation en secondes de ce sort pour ce joueur (maîtrise et bâton compris), pour l'affichage dans le menu. */
     public static float castSeconds(ServerPlayer player, SpellDefinition def) {
         int casts = player.getData(ModAttachments.PROGRESSION).getSpellCasts(def.id());
-        float base = def.baseCastDurationTicks() * MasteryEffects.castTimeMultiplier(casts);
+        float base = def.baseCastDurationTicks() * MasteryEffects.castTimeMultiplier(casts, def.masteryCastsRequired());
         base /= (float) Math.max(0.1, player.getAttributeValue(ModAttributes.CASTING_SPEED));
         return base / 20f;
     }
