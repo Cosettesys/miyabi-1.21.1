@@ -25,7 +25,7 @@ public record MenuDataPayload(
                              float mastery, float learning, String description, String incantation) {}
     public record TechniqueEntry(String id, String style, String rank, boolean learned,
                                  float damage, float cooldownSeconds, float reach, String physical, String weapon,
-                                 float mastery, float learning) {}
+                                 float mastery, float learning, boolean evaluating) {}
     public static final Type<MenuDataPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(Miyabi.MODID, "menu_data"));
     public static final StreamCodec<FriendlyByteBuf, MenuDataPayload> STREAM_CODEC =
@@ -80,6 +80,7 @@ public record MenuDataPayload(
             buf.writeUtf(e.weapon());
             buf.writeFloat(e.mastery());
             buf.writeFloat(e.learning());
+            buf.writeBoolean(e.evaluating());
         }
         buf.writeVarInt(p.slots().size());
         for (String id : p.slots()) {
@@ -119,7 +120,7 @@ public record MenuDataPayload(
         for (int i = 0; i < techniqueCount; i++) {
             techniques.add(new TechniqueEntry(buf.readUtf(), buf.readUtf(), buf.readUtf(), buf.readBoolean(),
                     buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readUtf(), buf.readUtf(),
-                    buf.readFloat(), buf.readFloat()));
+                    buf.readFloat(), buf.readFloat(), buf.readBoolean()));
         }
         int slotCount = buf.readVarInt();
         List<String> slots = new ArrayList<>();

@@ -1,6 +1,7 @@
 package net.cosette.miyabi.config;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
+import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.file.FileNotFoundAction;
 import com.electronwill.nightconfig.core.io.WritingMode;
@@ -10,6 +11,9 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Lecture et écriture de fichiers TOML. Chaque lecture d'une valeur est aussi une écriture : si la clé manque, la valeur
@@ -50,6 +54,34 @@ public final class ConfigIO {
     }
     public static void sectionComment(CommentedConfig config, String path, String comment) {
         describe(config, path, comment);
+    }
+    /** Noms des sous-tableaux d'un tableau (par exemple les sections [objectives.xxx] de "objectives"). */
+    public static List<String> tableNames(CommentedConfig config, String path) {
+        List<String> names = new ArrayList<>();
+        Object raw = config.get(path);
+        if (raw instanceof UnmodifiableConfig table) {
+            for (Map.Entry<String, Object> entry : table.valueMap().entrySet()) {
+                if (entry.getValue() instanceof UnmodifiableConfig) {
+                    names.add(entry.getKey());
+                }
+            }
+        }
+        return names;
+    }
+
+    public static List<String> getStringList(CommentedConfig config, String path, List<String> def, String comment, ConfigReport report) {
+        Object raw = config.get(path);
+        List<String> value = def;
+        if (raw == null) {
+            config.set(path, new ArrayList<>(def));
+            report.valueAdded();
+        } else if (raw instanceof List<?> list) {
+            value = list.stream().map(String::valueOf).toList();
+        } else {
+            report.warn(path + " : liste de textes attendue, valeur par défaut utilisée (" + raw + ")");
+        }
+        describe(config, path, comment);
+        return value;
     }
     public static double getDouble(CommentedConfig config, String path, double def, String comment,
                                    double min, double max, ConfigReport report) {

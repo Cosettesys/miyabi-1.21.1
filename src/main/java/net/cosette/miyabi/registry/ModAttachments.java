@@ -4,6 +4,7 @@ import net.cosette.miyabi.skills.battleaura.AuraTrackerState;
 import net.cosette.miyabi.skills.battleaura.BattleAuraBuffData;
 import net.cosette.miyabi.skills.cast.SlotHudSyncState;
 import net.cosette.miyabi.skills.swordtechniques.TechniqueCooldownData;
+import net.cosette.miyabi.trainer.QuestData;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.neoforged.neoforge.attachment.AttachmentType;
@@ -52,6 +53,9 @@ public final class ModAttachments {
     public static final Supplier<AttachmentType<BattleAuraBuffData>> AURA_BUFF = persistent("aura_buff",
             BattleAuraBuffData::new,
             BattleAuraBuffData::deserializeNBT, BattleAuraBuffData::serializeNBT, true);
+    public static final Supplier<AttachmentType<QuestData>> QUEST = persistent("quest",
+            QuestData::new,
+            QuestData::deserializeNBT, QuestData::serializeNBT, true);
     // --- Sauvegardée mais remise à zéro à la mort ---
     public static final Supplier<AttachmentType<SchoolResistanceData>> SCHOOL_RESISTANCE = persistent("school_resistance",
             SchoolResistanceData::new,

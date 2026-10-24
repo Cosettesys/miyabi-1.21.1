@@ -26,7 +26,11 @@
   "effect.miyabi.burned": "Burned",
   "item.miyabi.spell_scroll": "Spell Scroll",
   "item.miyabi.grimoire": "Grimoire",
-  "item.miyabi.trainer_spawn_egg": "Trainer Spawn Egg",
-  "entity.miyabi.trainer": "Trainer",
+  "item.miyabi.trainer_sword_god_spawn_egg": "Sword God Trainer Spawn Egg",
+  "item.miyabi.trainer_north_god_spawn_egg": "North God Trainer Spawn Egg",
+  "item.miyabi.trainer_water_god_spawn_egg": "Water God Trainer Spawn Egg",
+  "entity.miyabi.trainer.sword_god": "Sword God Trainer",
+  "entity.miyabi.trainer.north_god": "North God Trainer",
+  "entity.miyabi.trainer.water_god": "Water God Trainer",
   "container.miyabi.trainer": "Trainer"
 }

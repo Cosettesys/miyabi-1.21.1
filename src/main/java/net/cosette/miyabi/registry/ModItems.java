@@ -1,13 +1,17 @@
 package net.cosette.miyabi.registry;
 
 import net.cosette.miyabi.item.SpellTeachingItem;
+import net.cosette.miyabi.progression.SwordStyle;
 import net.cosette.miyabi.skills.SpellRegistry;
 import net.cosette.miyabi.skills.learning.LearnMethod;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -44,8 +48,19 @@ public final class ModItems {
     public static final DeferredItem<SpellTeachingItem> GRIMOIRE =
             ITEMS.register("grimoire", () -> new SpellTeachingItem(new Item.Properties().stacksTo(1), LearnMethod.GRIMOIRE));
     /** Oeuf d'apparition de l'entraîneur. */
-    public static final DeferredItem<DeferredSpawnEggItem> TRAINER_SPAWN_EGG =
-            ITEMS.register("trainer_spawn_egg", () -> new DeferredSpawnEggItem(ModEntities.TRAINER, 0x3355AA, 0xE8E0C0, new Item.Properties()));
+    /** Données d'entité d'un œuf d'entraîneur : le style qu'il enseignera. */
+    private static Item.Properties trainerEgg(SwordStyle style) {
+        CompoundTag tag = new CompoundTag();
+        tag.putString("Style", style.name());
+        return new Item.Properties().component(DataComponents.ENTITY_DATA, CustomData.of(tag));
+    }
+    /** Oeufs d'apparition des trois entraîneurs, un par style. */
+    public static final DeferredItem<DeferredSpawnEggItem> TRAINER_SWORD_GOD_EGG =
+            ITEMS.register("trainer_sword_god_spawn_egg", () -> new DeferredSpawnEggItem(ModEntities.TRAINER, 0xB03030, 0xE8E0C0, trainerEgg(SwordStyle.SWORD_GOD)));
+    public static final DeferredItem<DeferredSpawnEggItem> TRAINER_NORTH_GOD_EGG =
+            ITEMS.register("trainer_north_god_spawn_egg", () -> new DeferredSpawnEggItem(ModEntities.TRAINER, 0x3A6EA5, 0xE8E0C0, trainerEgg(SwordStyle.NORTH_GOD)));
+    public static final DeferredItem<DeferredSpawnEggItem> TRAINER_WATER_GOD_EGG =
+            ITEMS.register("trainer_water_god_spawn_egg", () -> new DeferredSpawnEggItem(ModEntities.TRAINER, 0x3AA8C7, 0xE8E0C0, trainerEgg(SwordStyle.WATER_GOD)));
     @SubscribeEvent
     public static void onBuildCreativeTab(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.COMBAT) {
@@ -61,7 +76,9 @@ public final class ModItems {
             }
         }
         if (event.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {
-            event.accept(TRAINER_SPAWN_EGG);
+            event.accept(TRAINER_SWORD_GOD_EGG);
+            event.accept(TRAINER_NORTH_GOD_EGG);
+            event.accept(TRAINER_WATER_GOD_EGG);
         }
     }
 }

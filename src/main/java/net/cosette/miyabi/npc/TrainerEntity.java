@@ -1,6 +1,10 @@
 package net.cosette.miyabi.npc;
 
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -17,13 +21,17 @@ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.cosette.miyabi.network.handler.TrainerPacketHandlers;
+import net.cosette.miyabi.progression.SwordStyle;
 
 /**
- * Entraîneur : un PNJ immobile et protégé qui ouvre un menu quand on lui parle. Chaque joueur reçoit son propre menu,
- * donc plusieurs joueurs peuvent parler au même entraîneur en même temps.
- * Plus tard : il enseignera des techniques d'épée (et des sorts) contre des conditions, dans un dojo.
+ * Entraîneur : un PNJ immobile et protégé, un par style de combat, qui ouvre un menu quand on lui parle.
+ * Chaque joueur reçoit son propre menu, donc plusieurs joueurs peuvent parler au même entraîneur en même temps.
  */
 public class TrainerEntity extends PathfinderMob {
+    /** Style de combat enseigné (SWORD_GOD, NORTH_GOD ou WATER_GOD), synchronisé avec les clients. */
+    private static final EntityDataAccessor<String> STYLE =
+            SynchedEntityData.defineId(TrainerEntity.class, EntityDataSerializers.STRING);
     public TrainerEntity(EntityType<? extends TrainerEntity> type, Level level) {
         super(type, level);
         setPersistenceRequired();
@@ -35,6 +43,42 @@ public class TrainerEntity extends PathfinderMob {
     @Override
     public boolean isInvulnerableTo(DamageSource source) {
         return !(source.is(DamageTypes.GENERIC_KILL) || source.is(DamageTypes.FELL_OUT_OF_WORLD));
+    }
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(STYLE, SwordStyle.SWORD_GOD.name());
+    }
+    public SwordStyle getStyle() {
+        try {
+            return SwordStyle.valueOf(entityData.get(STYLE));
+        } catch (IllegalArgumentException e) {
+            return SwordStyle.SWORD_GOD;
+        }
+    }
+    public void setStyle(SwordStyle style) {
+        entityData.set(STYLE, style.name());
+    }
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        tag.putString("Style", getStyle().name());
+    }
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        if (tag.contains("Style")) {
+            try {
+                setStyle(SwordStyle.valueOf(tag.getString("Style")));
+            } catch (IllegalArgumentException ignored) {
+                // style inconnu : on garde celui par défaut
+            }
+        }
+    }
+    /** Nom affiché : "Entraîneur" suivi de son style (clés de langue entity.miyabi.trainer.<style>). */
+    @Override
+    protected Component getTypeName() {
+        return Component.translatable("entity.miyabi.trainer." + getStyle().name().toLowerCase());
     }
     public static AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes()
@@ -62,6 +106,7 @@ public class TrainerEntity extends PathfinderMob {
                     new SimpleMenuProvider((id, inventory, p) -> new TrainerMenu(id, inventory, this),
                             Component.translatable("container.miyabi.trainer")),
                     buffer -> buffer.writeVarInt(getId()));
+            TrainerPacketHandlers.sendSnapshot(serverPlayer, getStyle());
         }
         return InteractionResult.sidedSuccess(level().isClientSide());
     }

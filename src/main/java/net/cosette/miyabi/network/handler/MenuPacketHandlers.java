@@ -6,6 +6,7 @@ import net.cosette.miyabi.skills.battleaura.BattleAuraManager;
 import net.cosette.miyabi.skills.magic.effect.DamageEffect;
 import net.cosette.miyabi.skills.magic.effect.HealEffect;
 import net.cosette.miyabi.skills.swordtechniques.TechniqueManager;
+import net.cosette.miyabi.trainer.QuestData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -113,7 +114,10 @@ public final class MenuPacketHandlers {
                 .thenComparing(SwordTechniqueDefinition::id));
         List<MenuDataPayload.TechniqueEntry> techniques = new ArrayList<>();
         for (SwordTechniqueDefinition t : techs) {
-            if (!progression.isTechniqueUnlocked(t.id())) continue; // technique pas encore débloquée : invisible
+            // Une technique pas encore débloquée est invisible, sauf celle dont l'évaluation est en cours (affichée en orange)
+            QuestData quest = player.getData(ModAttachments.QUEST);
+            boolean evaluating = quest.getKind() == QuestData.Kind.LEARN && quest.getTechniqueId().equals(t.id());
+            if (!progression.isTechniqueUnlocked(t.id()) && !evaluating) continue;
             float damage = t.baseDamage() * t.physicalType().getDamageMultiplier()
                     * progression.getStyleRank(t.style()).getDamageMultiplier();
             String weapon = t.requiredWeapon() == null ? "" : t.requiredWeapon().location().toString();
@@ -121,7 +125,7 @@ public final class MenuPacketHandlers {
                     progression.isTechniqueLearned(t.id()),
                     damage, TechniqueManager.effectiveCooldownTicks(player, t) / 20f, t.reach(), t.physicalType().name(), weapon,
                     Math.min(1f, progression.getTechniqueUses(t.id()) / (float) MasteryManager.TECHNIQUE_MASTERY_USES),
-                    progression.getTechniqueLearning(t.id()) / 100f));
+                    progression.getTechniqueLearning(t.id()) / 100f, evaluating));
         }
         SpellSlotsData slotData = player.getData(ModAttachments.SPELL_SLOTS);
         List<String> slots = new ArrayList<>();

@@ -21,6 +21,8 @@ public final class MiyabiCommands {
                 .then(SpellCommands.branch())
                 .then(TechniqueCommands.branch())
                 .then(MagicCommands.branch())
-                .then(ConfigCommands.branch()));
+                .then(ConfigCommands.branch())
+                .then(QuestCommands.branch()));
+
     }
 }

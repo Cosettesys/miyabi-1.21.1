@@ -23,7 +23,7 @@ import net.cosette.miyabi.client.input.MiyabiKeyMappings;
 
 public class MiyabiMenuScreen extends Screen {
     private enum View { MAIN, MAGIC_SCHOOLS, MAGIC_LIST, SWORD_STYLES, SWORD_LIST, AURA }
-    private record ListEntry(String id, String text, boolean dim) {}
+    private record ListEntry(String id, String text, boolean dim, boolean evaluating) {}
     private record EntryRow(String id, int x1, int y1, int x2, int y2) {}
     private static final int PANEL_W = 400;
     private static final int PANEL_MAX_H = 250;
@@ -32,6 +32,7 @@ public class MiyabiMenuScreen extends Screen {
     private static final int GREY = 0xFFCCCCCC;
     private static final int YELLOW = 0xFFFFFF55;
     private static final int DIM = 0xFF999999; // sort débloqué mais pas encore appris
+    private static final int ORANGE = 0xFFFFAA33; // technique dont l'évaluation est en cours chez un entraîneur
     private MenuDataPayload data;
     private View view = View.MAIN;
     private MagicSchool selectedSchool = null;
@@ -288,7 +289,7 @@ public class MiyabiMenuScreen extends Screen {
         List<ListEntry> entries = new ArrayList<>();
         for (MenuDataPayload.SpellEntry s : data.spells()) {
             if (!inSchool(s, selectedSchool)) continue;
-            entries.add(new ListEntry(s.id(), s.id() + " [" + s.rank() + "]", !s.learned()));
+            entries.add(new ListEntry(s.id(), s.id() + " [" + s.rank() + "]", !s.learned(), false));
         }
         renderEntries(g, x, entries, "Aucun sort pour cette école pour l'instant.");
         renderSpellDetails(g);
@@ -303,7 +304,7 @@ public class MiyabiMenuScreen extends Screen {
         List<ListEntry> entries = new ArrayList<>();
         for (MenuDataPayload.TechniqueEntry t : data.techniques()) {
             if (!t.style().equals(selectedStyle.name())) continue;
-            entries.add(new ListEntry(t.id(), t.id() + " [" + t.rank() + "]", !t.learned()));
+            entries.add(new ListEntry(t.id(), t.id() + " [" + t.rank() + "]", !t.learned(), t.evaluating()));
         }
         renderEntries(g, x, entries, "Aucune technique pour ce style pour l'instant.");
         renderTechniqueDetails(g);
@@ -326,7 +327,7 @@ public class MiyabiMenuScreen extends Screen {
                 g.fill(x - 2, rowY - 1, rowRight, rowY + LINE_H - 1, 0x66FFFFFF);
             }
             entryRows.add(new EntryRow(e.id(), x - 2, rowY - 1, rowRight, rowY + LINE_H - 1));
-            line(g, this.font.plainSubstrByWidth(e.text() + slotLabel, rowRight - x - 6), x + 4, rowY, selected ? YELLOW : (e.dim() ? DIM : WHITE));
+            line(g, this.font.plainSubstrByWidth(e.text() + slotLabel, rowRight - x - 6), x + 4, rowY, selected ? YELLOW : (e.evaluating() ? ORANGE : (e.dim() ? DIM : WHITE)));
         }
         drawScrollbar(g, entries.size());
     }
@@ -550,7 +551,9 @@ public class MiyabiMenuScreen extends Screen {
             List<DetailLine> lines = new ArrayList<>();
             lines.add(DetailLine.text(t.id(), YELLOW));
             lines.add(DetailLine.text("Style : " + t.style() + "  |  Rang : " + t.rank(), WHITE));
-            lines.add(DetailLine.text(t.learned() ? "Technique apprise" : "Technique à apprendre", t.learned() ? 0xFF55FF55 : DIM));
+            lines.add(t.evaluating()
+                    ? DetailLine.text("Évaluation en cours chez un entraîneur", ORANGE)
+                    : DetailLine.text(t.learned() ? "Technique apprise" : "Technique à apprendre", t.learned() ? 0xFF55FF55 : DIM));
             lines.add(DetailLine.gauge(t.learned() ? "Maîtrise" : "Apprentissage", t.learned() ? t.mastery() : t.learning()));
             lines.add(DetailLine.text("", WHITE));
             lines.add(DetailLine.text("Dégâts : " + num(t.damage()) + " (" + t.physical() + ")", WHITE));

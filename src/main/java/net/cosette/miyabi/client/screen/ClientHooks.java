@@ -3,6 +3,7 @@ package net.cosette.miyabi.client.screen;
 import net.cosette.miyabi.client.hud.ClientIncantationState;
 import net.cosette.miyabi.client.hud.IncantationHud;
 import net.cosette.miyabi.config.ClientSettings;
+import net.cosette.miyabi.network.payload.TrainerDataPayload;
 import net.minecraft.client.Minecraft;
 import net.cosette.miyabi.network.payload.MenuDataPayload;
 import net.minecraft.network.chat.Component;
@@ -39,5 +40,10 @@ public final class ClientHooks {
             return;
         }
         ClientIncantationState.start(text, color, durationTicks, progressTicks, now);
+    }
+    /** Nouvel état du menu de l'entraîneur : l'écran le lit à chaque image. */
+    public static void updateTrainer(TrainerDataPayload data) {
+        Minecraft mc = Minecraft.getInstance();
+        ClientTrainerState.update(data, mc.level == null ? 0 : mc.level.getGameTime());
     }
 }

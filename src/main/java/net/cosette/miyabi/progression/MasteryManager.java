@@ -1,6 +1,7 @@
 package net.cosette.miyabi.progression;
 
 import net.cosette.miyabi.config.ConfigValue;
+import net.cosette.miyabi.trainer.TrainerRules;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.cosette.miyabi.registry.ModAttachments;
@@ -68,6 +69,12 @@ public final class MasteryManager {
         int points = data.getStyleMastery(style) + MASTERY_PER_CAST;
         int required = current.getMasteryToNext();
         if (points >= required) {
+            if (TrainerRules.trialRequired(current)) {
+                // À partir du rang Avancé, il faut réussir l'épreuve d'un entraîneur : on reste à un point du rang suivant.
+                data.setStyleMastery(style, required - 1);
+                player.displayClientMessage(Component.literal("Je dois passer une épreuve auprès d'un maître pour progresser dans ce style."), true);
+                return;
+            }
             if (!canRankUp(data, next)) {
                 // Bloqué juste avant le palier, sans dire pourquoi précisément.
                 data.setStyleMastery(style, required - 1);

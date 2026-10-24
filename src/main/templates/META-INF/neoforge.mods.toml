@@ -46,7 +46,7 @@ authors="Cosettesys"
 
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-A Mushoku Tensei fan-made mod. Probably will stay a small project.
+A Mushoku Tensei fan-made mod.
 '''
 
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
@@ -88,6 +88,13 @@ config="${mod_id}.mixins.json"
     ordering="NONE"
     side="BOTH"
 
+# GeckoLib : animations des projectiles de sorts
+[[dependencies.${mod_id}]]
+modId="geckolib"
+type="required"
+versionRange="[4,5)"
+ordering="NONE"
+side="BOTH"
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
 # stop your mod loading on the server for example.

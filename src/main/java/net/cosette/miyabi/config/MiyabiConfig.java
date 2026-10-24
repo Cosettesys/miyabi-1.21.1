@@ -4,6 +4,9 @@ import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.mojang.logging.LogUtils;
 import net.cosette.miyabi.skills.magic.status.ElementalReactions;
+import net.cosette.miyabi.trainer.ObjectivePool;
+import net.cosette.miyabi.trainer.TrainerConfig;
+import net.cosette.miyabi.trainer.TrainerRules;
 import net.neoforged.fml.loading.FMLPaths;
 import net.cosette.miyabi.progression.MagicRank;
 import net.cosette.miyabi.progression.MasteryEffects;
@@ -48,7 +51,7 @@ public final class MiyabiConfig {
     private static final Class<?>[] BOUND_CLASSES = {
             ManaData.class, MeditationManager.class, CastManager.class, StaffBonuses.class,
             MasteryManager.class, MasteryEffects.class, SpellLearning.class,
-            BattleAuraLevels.class, BattleAuraBuffs.class, BattleAuraTracker.class, TechniqueManager.class, ElementalReactions.class
+            BattleAuraLevels.class, BattleAuraBuffs.class, BattleAuraTracker.class, TechniqueManager.class, ElementalReactions.class, TrainerRules.class
     };
     private static final Map<String, String> SECTION_COMMENTS = new LinkedHashMap<>();
     static {
@@ -62,6 +65,7 @@ public final class MiyabiConfig {
         SECTION_COMMENTS.put("sword_techniques", "Utilisation des techniques d'épée.");
         SECTION_COMMENTS.put("ranks", "Rangs : points de maîtrise pour passer au rang suivant et multiplicateur de dégâts des sorts.");
         SECTION_COMMENTS.put("physical_types", "Types de dégâts physiques : multiplicateur de dégâts, pénétration d'armure et usure de l'armure.");
+        SECTION_COMMENTS.put("trainer", "Entraîneurs : épreuves de rang et délais (en heures de jeu : 1 h = 1000 ticks).");
     }
     public static Path directory() {
         return FMLPaths.CONFIGDIR.get().resolve("miyabi");
@@ -73,6 +77,8 @@ public final class MiyabiConfig {
         loadGeneral(dir.resolve("miyabi.toml"), report);
         loadSpells(dir.resolve("magic"), report);
         loadTechniques(dir.resolve("styles"), report);
+        ObjectivePool.load(dir.resolve("objectives.toml"), report);
+        TrainerConfig.load(dir.resolve("trainers"), report);
         for (String warning : report.warnings()) {
             LOGGER.warn("[Miyabi config] {}", warning);
         }
